@@ -396,8 +396,17 @@ export default function HomePage() {
   ) => {
     if (!previewRef.current) return;
 
+    console.group(`[Download Pipeline] 🚀 Export Request: ${fileName}.${format} (${resolution}px)`);
+    console.log('[Download Pipeline] User authentication status:', {
+      isAuthenticated: !!user,
+      uid: user?.uid,
+      email: user?.email,
+    });
+
     // Gate: User must be signed in to download
     if (!user) {
+      console.warn('[Download Pipeline] Blocked: User not authenticated. Opening login modal.');
+      console.groupEnd();
       pendingDownloadRef.current = { format, resolution, fileName };
       setAuthModalReason(
         'Please sign in or create an account to download your QR code and automatically save it to your personal collection history.'
@@ -408,17 +417,21 @@ export default function HomePage() {
     }
 
     try {
+      console.log('[Download Pipeline] Step 1: Triggering previewRef.current.downloadQR...');
       await previewRef.current.downloadQR(format, resolution, fileName);
+      console.log('[Download Pipeline] Step 1: File download action completed successfully.');
 
       // Persist logo to Cloudflare R2 if it is base64 dataUrl
       let currentDesign = { ...design };
       if (design.logo?.dataUrl && design.logo.dataUrl.startsWith('data:')) {
         try {
+          console.log('[Download Pipeline] Step 2: Uploading custom logo to Cloudflare R2...');
           const uploadRes = await uploadLogoToStorage(
             design.logo.dataUrl,
             design.logo.fileName || `${fileName}-logo.png`
           );
           if (uploadRes.success && uploadRes.url) {
+            console.log('[Download Pipeline] Step 2: Logo uploaded to Cloudflare R2:', uploadRes.url);
             currentDesign = {
               ...design,
               logo: {
@@ -428,7 +441,7 @@ export default function HomePage() {
             };
           }
         } catch (uploadErr) {
-          console.warn('Logo upload to R2 failed during history recording:', uploadErr);
+          console.warn('[Download Pipeline] Step 2: Logo upload to R2 failed during history recording:', uploadErr);
         }
       }
 
@@ -447,11 +460,18 @@ export default function HomePage() {
         downloadedAt: Date.now(),
       };
 
+      console.log('[Download Pipeline] Step 3: Saving item to download history collection...', {
+        id: historyItem.id,
+        name: historyItem.name,
+        format: historyItem.format,
+      });
+
       if (isFirebaseConfigured) {
         try {
           await recordDownloadHistory(user.uid, historyItem, currentDesign.logo?.dataUrl);
+          console.log('[Download Pipeline] Step 3: Successfully recorded to Firestore history collection.');
         } catch (dbErr) {
-          console.warn('Could not record history in Firestore, storing locally:', dbErr);
+          console.warn('[Download Pipeline] Firestore record failed (security rules pending in console), saving to local storage fallback:', dbErr);
           const updated = saveLocalDownloadHistory(historyItem);
           setDownloadHistory(updated);
         }
@@ -460,8 +480,12 @@ export default function HomePage() {
         setDownloadHistory(updated);
       }
 
+      console.log('[Download Pipeline] ✅ Complete! Download and collection recording finished.');
+      console.groupEnd();
       success(`${format.toUpperCase()} downloaded & stored in your collection history!`);
     } catch (err: any) {
+      console.error('[Download Pipeline] ❌ Download failed with error:', err);
+      console.groupEnd();
       error(err.message || 'Failed to download QR code.');
     }
   };

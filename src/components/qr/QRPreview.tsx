@@ -265,84 +265,79 @@ export const QRPreview = forwardRef<QRPreviewRef, QRPreviewProps>(function QRPre
         reader.readAsDataURL(finalBlob!);
       });
 
-      // --- Downloader Engine 1: Server-side HTTP Attachment Streamer (/api/download) ---
-      // This is the gold standard: Sends a native HTTP response with "Content-Disposition: attachment; filename=..."
-      // Completely bypasses browser blob-URL bugs, IDM/download-manager UUID overwrites, and extension-stripping.
-      let downloadSucceeded = false;
+      console.log('[QR Studio] 5a. Binary blob generated:', {
+        bytes: finalBlob.size,
+        type: finalBlob.type,
+        targetFileName: fullFileName
+      });
+      console.log('[QR Studio] 5b. Base64 Data URL ready, length:', dataUrl.length);
+
+      // ─── ENGINE 1: Native OS File System Access API (showSaveFilePicker) ───
+      // Supported in modern Edge & Chrome on Windows desktop.
+      // Prompts user with native OS Save As dialog prefilled with fullFileName.
+      // Writes binary stream directly to user selected path, eliminating browser UUID mangling.
+      if (typeof window !== 'undefined' && 'showSaveFilePicker' in window) {
+        try {
+          console.log('[QR Studio] 🚀 Engine 1: Triggering native showSaveFilePicker with suggested name:', fullFileName);
+          const handle = await (window as any).showSaveFilePicker({
+            suggestedName: fullFileName,
+            types: [
+              {
+                description: format === 'svg' ? 'Scalable Vector Graphics (*.svg)' : 'PNG Image (*.png)',
+                accept: {
+                  [format === 'svg' ? 'image/svg+xml' : 'image/png']: [`.${format}`],
+                },
+              },
+            ],
+          });
+          const writable = await handle.createWritable();
+          await writable.write(finalBlob);
+          await writable.close();
+          console.log('[QR Studio] ✅ Success via Native File Picker! File written to disk:', fullFileName);
+          return;
+        } catch (pickerErr: any) {
+          if (pickerErr.name === 'AbortError') {
+            console.log('[QR Studio] ℹ️ User cancelled Save File dialog.');
+            return;
+          }
+          console.warn('[QR Studio] Native picker failed or declined, falling back to direct anchor:', pickerErr);
+        }
+      }
+
+      // ─── ENGINE 2: Direct Data URI Anchor Download ───
+      // Data URIs contain NO blob UUID in their URL string.
+      // Setting download attribute on a Data URI instructs Chrome/Edge to save with fullFileName.
       try {
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = '/api/download';
-        form.style.position = 'fixed';
-        form.style.left = '-9999px';
-        form.style.top = '-9999px';
-        form.style.opacity = '0';
-
-        const nameInput = document.createElement('input');
-        nameInput.type = 'hidden';
-        nameInput.name = 'fileName';
-        nameInput.value = fullFileName;
-        form.appendChild(nameInput);
-
-        const typeInput = document.createElement('input');
-        typeInput.type = 'hidden';
-        typeInput.name = 'mimeType';
-        typeInput.value = format === 'svg' ? 'image/svg+xml' : 'image/png';
-        form.appendChild(typeInput);
-
-        const dataInput = document.createElement('input');
-        dataInput.type = 'hidden';
-        dataInput.name = 'data';
-        dataInput.value = dataUrl;
-        form.appendChild(dataInput);
-
-        document.body.appendChild(form);
-        form.submit();
-        downloadSucceeded = true;
-
+        console.log('[QR Studio] 🚀 Engine 2: Triggering Direct Data URI Anchor for:', fullFileName);
+        const downloadLink = document.createElement('a');
+        downloadLink.download = fullFileName;
+        downloadLink.href = dataUrl;
+        downloadLink.style.position = 'fixed';
+        downloadLink.style.left = '-9999px';
+        downloadLink.style.top = '-9999px';
+        downloadLink.style.opacity = '0';
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        console.log('[QR Studio] ✅ Success via Direct Data URI Anchor! Dispatched click.');
         setTimeout(() => {
-          if (form.parentNode) {
-            form.parentNode.removeChild(form);
+          if (downloadLink.parentNode) {
+            downloadLink.parentNode.removeChild(downloadLink);
           }
         }, 3000);
-      } catch (streamErr) {
-        console.warn('HTTP attachment stream engine failed, falling back to Data URL engine:', streamErr);
+        return;
+      } catch (dataErr) {
+        console.warn('[QR Studio] Engine 2 failed, falling back to FileSaver:', dataErr);
       }
 
-      // --- Downloader Engine 2: Direct Data URL anchor fallback ---
-      // If HTTP form could not be dispatched, use data: URL (has NO blob UUID in URI)
-      if (!downloadSucceeded) {
-        try {
-          const downloadLink = document.createElement('a');
-          downloadLink.style.position = 'fixed';
-          downloadLink.style.left = '-9999px';
-          downloadLink.style.opacity = '0';
-          downloadLink.href = dataUrl;
-          downloadLink.download = fullFileName;
-          downloadLink.setAttribute('download', fullFileName);
-          document.body.appendChild(downloadLink);
-          downloadLink.click();
-          downloadSucceeded = true;
-          setTimeout(() => {
-            if (downloadLink.parentNode) {
-              downloadLink.parentNode.removeChild(downloadLink);
-            }
-          }, 3000);
-        } catch (dataUrlErr) {
-          console.warn('Data URL engine failed, falling back to file-saver:', dataUrlErr);
-        }
-      }
-
-      // --- Downloader Engine 3: file-saver library fallback ---
-      if (!downloadSucceeded) {
-        try {
-          const { saveAs } = await import('file-saver');
-          saveAs(finalBlob, fullFileName);
-          downloadSucceeded = true;
-        } catch (fsErr) {
-          console.error('All download engines failed:', fsErr);
-          throw new Error('Unable to trigger file download in this browser.');
-        }
+      // ─── ENGINE 3: FileSaver.js Fallback ───
+      try {
+        console.log('[QR Studio] 🚀 Engine 3: Fallback to FileSaver.js saveAs...');
+        const { saveAs } = await import('file-saver');
+        saveAs(finalBlob, fullFileName);
+        console.log('[QR Studio] ✅ Success via FileSaver.js!');
+      } catch (fsErr) {
+        console.error('[QR Studio] ❌ All download engines failed:', fsErr);
+        throw new Error('All download engines failed to save file.');
       }
     },
 
