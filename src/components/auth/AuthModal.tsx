@@ -11,15 +11,16 @@ import {
   formatAuthError,
 } from '@/lib/firebase/services';
 import { isFirebaseConfigured } from '@/lib/firebase/client';
-import { Mail, Lock, AlertCircle, CheckCircle2, Loader2, Info, ShieldCheck } from 'lucide-react';
+import { Mail, Lock, AlertCircle, CheckCircle2, Loader2, Info, ShieldCheck, Download } from 'lucide-react';
 
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: (message: string) => void;
+  reason?: string | null;
 }
 
-export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
+export function AuthModal({ isOpen, onClose, onSuccess, reason }: AuthModalProps) {
   const [mode, setMode] = useState<AuthMode>('sign_in');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -120,6 +121,17 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
   return (
     <Modal isOpen={isOpen} onClose={handleClose} title={title} description={description} maxWidth="sm">
       <div className="space-y-4">
+        {/* Context / Reason Notice (e.g. login required to download) */}
+        {reason && (
+          <div className="p-3 bg-indigo-50 border border-indigo-200 rounded-xl flex items-start gap-2.5 text-xs text-indigo-900 shadow-2xs">
+            <Download className="w-4 h-4 text-indigo-600 shrink-0 mt-0.5" />
+            <div>
+              <p className="font-semibold text-indigo-950">Login Required to Download</p>
+              <p className="text-indigo-700 mt-0.5 leading-relaxed">{reason}</p>
+            </div>
+          </div>
+        )}
+
         {/* Firebase connection status */}
         {isFirebaseConfigured ? (
           <div className="p-2.5 bg-emerald-50/70 border border-emerald-200/80 rounded-xl flex items-center gap-2 text-xs text-emerald-800">

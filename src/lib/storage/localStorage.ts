@@ -1,6 +1,7 @@
-import { SavedQRCode } from '@/types/qr';
+import { SavedQRCode, QRDownloadHistoryItem } from '@/types/qr';
 
 const STORAGE_KEY = 'qr_brand_studio_saved_codes_v1';
+const HISTORY_STORAGE_KEY = 'qr_brand_studio_download_history_v1';
 
 export function getLocalSavedQRCodes(): SavedQRCode[] {
   if (typeof window === 'undefined') return [];
@@ -63,3 +64,51 @@ export function renameLocalQRCode(id: string, newName: string): SavedQRCode[] {
     return getLocalSavedQRCodes();
   }
 }
+
+export function getLocalDownloadHistory(): QRDownloadHistoryItem[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = localStorage.getItem(HISTORY_STORAGE_KEY);
+    if (!raw) return [];
+    return JSON.parse(raw);
+  } catch (err) {
+    console.error('Failed to read download history from local storage:', err);
+    return [];
+  }
+}
+
+export function saveLocalDownloadHistory(item: QRDownloadHistoryItem): QRDownloadHistoryItem[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const existing = getLocalDownloadHistory();
+    const updated = [item, ...existing.filter((i) => i.id !== item.id)];
+    localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(updated));
+    return updated;
+  } catch (err) {
+    console.error('Failed to save history to local storage:', err);
+    return getLocalDownloadHistory();
+  }
+}
+
+export function deleteLocalDownloadHistory(id: string): QRDownloadHistoryItem[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const existing = getLocalDownloadHistory();
+    const filtered = existing.filter((item) => item.id !== id);
+    localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(filtered));
+    return filtered;
+  } catch (err) {
+    console.error('Failed to delete history item from local storage:', err);
+    return getLocalDownloadHistory();
+  }
+}
+
+export function clearLocalDownloadHistory(): void {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.removeItem(HISTORY_STORAGE_KEY);
+  } catch (err) {
+    console.error('Failed to clear download history in local storage:', err);
+  }
+}
+

@@ -21,7 +21,7 @@ import {
   Unsubscribe,
 } from 'firebase/firestore';
 import { auth, db, googleProvider, isFirebaseConfigured } from './client';
-import { SavedQRCode } from '@/types/qr';
+import { SavedQRCode, QRDownloadHistoryItem } from '@/types/qr';
 
 export function subscribeToAuth(callback: (user: User | null) => void) {
   if (!isFirebaseConfigured || !auth) {
@@ -277,4 +277,192 @@ export function subscribeToUserQRCodes(
     return () => {};
   }
 }
+
+/**
+ * Records a downloaded QR code into the user's history collection in Firestore
+ */
+export async function recordDownloadHistory(
+  userId: string,
+  item: QRDownloadHistoryItem,
+  logoUrl?: string
+): Promise<QRDownloadHistoryItem> {
+  if (!isFirebaseConfigured || !db) {
+    return item;
+  }
+
+  const finalLogoUrl = logoUrl || item.design?.logo?.dataUrl || null;
+
+  const sanitizedDesign = {
+    ...item.design,
+    logo: {
+      ...item.design?.logo,
+      dataUrl: finalLogoUrl?.startsWith('data:') ? null : finalLogoUrl,
+      rawImageUrl: null,
+    },
+  };
+
+  const historyDocRef = doc(db, `users/${userId}/history`, item.id);
+
+  const rawDocPayload = {
+    id: item.id,
+    userId,
+    name: item.name,
+    type: item.type,
+    contentData: item.contentData,
+    encodedString: item.encodedString,
+    format: item.format,
+    resolution: item.resolution,
+    design: sanitizedDesign,
+    logoUrl: finalLogoUrl,
+    downloadedAt: item.downloadedAt || Date.now(),
+    serverTimestamp: serverTimestamp(),
+  };
+
+  const safePayload = cleanFirestoreData(rawDocPayload);
+  await setDoc(historyDocRef, safePayload, { merge: true });
+
+  return item;
+}
+
+/**
+ * Fetches all download history items for the user from Firestore
+ */
+export async function getDownloadHistoryFromFirestore(
+  userId: string
+): Promise<QRDownloadHistoryItem[]> {
+  if (!isFirebaseConfigured || !db) return [];
+
+  try {
+    const historyRef = collection(db, `users/${userId}/history`);
+    const q = query(historyRef, orderBy('downloadedAt', 'desc'));
+    const snapshot = await getDocs(q);
+
+    return snapshot.docs.map((docSnap) => {
+      const data = docSnap.data();
+      return {
+        id: data.id || docSnap.id,
+        userId: data.userId,
+        name: data.name || 'QR Code Export',
+        type: data.type || 'url',
+        contentData: data.contentData || {},
+        encodedString: data.encodedString || '',
+        format: data.format || 'png',
+        resolution: data.resolution || 1024,
+        design: {
+          ...data.design,
+          logo: {
+            ...data.design?.logo,
+            dataUrl: data.logoUrl || data.design?.logo?.dataUrl || undefined,
+          },
+        },
+        logoUrl: data.logoUrl || undefined,
+        downloadedAt:
+          data.downloadedAt instanceof Timestamp
+            ? data.downloadedAt.toMillis()
+            : data.downloadedAt || Date.now(),
+      } as QRDownloadHistoryItem;
+    });
+  } catch (err) {
+    console.warn('Error fetching download history from Firestore:', err);
+    return [];
+  }
+}
+
+/**
+ * Subscribes to real-time updates for user's download history from Firestore
+ */
+export function subscribeToUserDownloadHistory(
+  userId: string,
+  onData: (items: QRDownloadHistoryItem[]) => void,
+  onError?: (err: Error) => void
+): Unsubscribe {
+  if (!isFirebaseConfigured || !db) {
+    onData([]);
+    return () => {};
+  }
+
+  try {
+    const historyRef = collection(db, `users/${userId}/history`);
+    const q = query(historyRef, orderBy('downloadedAt', 'desc'));
+
+    return onSnapshot(
+      q,
+      (snapshot) => {
+        const items = snapshot.docs.map((docSnap) => {
+          const data = docSnap.data();
+          return {
+            id: data.id || docSnap.id,
+            userId: data.userId,
+            name: data.name || 'QR Code Export',
+            type: data.type || 'url',
+            contentData: data.contentData || {},
+            encodedString: data.encodedString || '',
+            format: data.format || 'png',
+            resolution: data.resolution || 1024,
+            design: {
+              ...data.design,
+              logo: {
+                ...data.design?.logo,
+                dataUrl: data.logoUrl || data.design?.logo?.dataUrl || undefined,
+              },
+            },
+            logoUrl: data.logoUrl || undefined,
+            downloadedAt:
+              data.downloadedAt instanceof Timestamp
+                ? data.downloadedAt.toMillis()
+                : data.downloadedAt || Date.now(),
+          } as QRDownloadHistoryItem;
+        });
+        onData(items);
+      },
+      (err) => {
+        console.warn('Real-time history sync error:', err);
+        if (onError) onError(err);
+      }
+    );
+  } catch (err: any) {
+    console.warn('Could not establish real-time history listener:', err);
+    if (onError) onError(err);
+    return () => {};
+  }
+}
+
+/**
+ * Deletes a single history item from Firestore
+ */
+export async function deleteDownloadHistoryItem(
+  userId: string,
+  itemId: string
+): Promise<void> {
+  if (!isFirebaseConfigured || !db) return;
+  const docRef = doc(db, `users/${userId}/history`, itemId);
+  await deleteDoc(docRef);
+}
+
+/**
+ * Clears all download history for a user from Firestore
+ */
+export async function clearUserDownloadHistory(
+  userId: string,
+  items?: QRDownloadHistoryItem[]
+): Promise<void> {
+  if (!isFirebaseConfigured || !db) return;
+  try {
+    if (items && items.length > 0) {
+      for (const item of items) {
+        const docRef = doc(db, `users/${userId}/history`, item.id);
+        await deleteDoc(docRef);
+      }
+    } else {
+      const historyRef = collection(db, `users/${userId}/history`);
+      const snapshot = await getDocs(historyRef);
+      for (const docSnap of snapshot.docs) {
+        await deleteDoc(docSnap.ref);
+      }
+    }
+  } catch (e) {
+    console.warn('Failed to clear download history in Firestore:', e);
+  }
+}
+
 

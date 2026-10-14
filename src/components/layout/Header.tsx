@@ -10,6 +10,7 @@ import Image from 'next/image';
 interface HeaderProps {
   user: AppUser | null;
   savedCount: number;
+  historyCount?: number;
   onOpenSaved: () => void;
   onOpenAuth: () => void;
   onSignOut: () => void;
@@ -18,10 +19,13 @@ interface HeaderProps {
 export function Header({
   user,
   savedCount,
+  historyCount = 0,
   onOpenSaved,
   onOpenAuth,
   onSignOut,
 }: HeaderProps) {
+  const totalCount = savedCount + historyCount;
+
   return (
     <header className="sticky top-0 z-30 w-full bg-white/90 backdrop-blur-md border-b border-slate-200/80 transition-all">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
@@ -47,17 +51,17 @@ export function Header({
 
         {/* Right side navigation & user actions */}
         <div className="flex items-center gap-2 sm:gap-3">
-          {/* Saved QR codes button with counter badge */}
+          {/* Saved & History button with counter badge */}
           <button
             type="button"
             onClick={onOpenSaved}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-700 bg-slate-50 hover:bg-slate-100 border border-slate-200 transition select-none cursor-pointer"
           >
             <FolderOpen className="w-4 h-4 text-slate-500" />
-            <span>Saved</span>
-            {savedCount > 0 && (
+            <span>Library</span>
+            {totalCount > 0 && (
               <span className="w-4 h-4 rounded-full bg-indigo-600 text-white text-[10px] flex items-center justify-center font-bold">
-                {savedCount}
+                {totalCount}
               </span>
             )}
           </button>

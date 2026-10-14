@@ -78,3 +78,18 @@ export interface ReliabilityReport {
   isLogoSafe: boolean;
   recommendations: string[];
 }
+
+export interface QRDownloadHistoryItem {
+  id: string;
+  userId: string;
+  name: string;
+  type: QRContentType;
+  contentData: Record<string, any>;
+  encodedString: string;
+  format: ExportFormat;
+  resolution: ExportResolution;
+  design: QRDesignSettings;
+  logoUrl?: string;
+  downloadedAt: number;
+}
+

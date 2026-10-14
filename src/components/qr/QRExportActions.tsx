@@ -2,19 +2,23 @@
 
 import React, { useState } from 'react';
 import { ExportFormat, ExportResolution } from '@/types/qr';
-import { Download, Copy, Check, FileCode, Image as ImageIcon, Loader2 } from 'lucide-react';
+import { Download, Copy, Check, FileCode, Image as ImageIcon, Loader2, Lock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface QRExportActionsProps {
   hasValidPayload: boolean;
+  isAuthenticated: boolean;
   onDownload: (format: ExportFormat, resolution: ExportResolution, fileName: string) => Promise<void>;
   onCopyToClipboard: () => Promise<void>;
+  onRequireAuth?: () => void;
 }
 
 export function QRExportActions({
   hasValidPayload,
+  isAuthenticated,
   onDownload,
   onCopyToClipboard,
+  onRequireAuth,
 }: QRExportActionsProps) {
   const [format, setFormat] = useState<ExportFormat>('png');
   const [resolution, setResolution] = useState<ExportResolution>(1024);
@@ -23,7 +27,12 @@ export function QRExportActions({
   const [isCopied, setIsCopied] = useState(false);
 
   const handleDownload = async () => {
-    if (!hasValidPayload || isExporting) return;
+    if (isExporting) return;
+    if (!isAuthenticated) {
+      if (onRequireAuth) onRequireAuth();
+      return;
+    }
+    if (!hasValidPayload) return;
     try {
       setIsExporting(true);
       await onDownload(format, resolution, fileName || 'qrcode');
@@ -33,7 +42,12 @@ export function QRExportActions({
   };
 
   const handleCopy = async () => {
-    if (!hasValidPayload || isExporting) return;
+    if (isExporting) return;
+    if (!isAuthenticated) {
+      if (onRequireAuth) onRequireAuth();
+      return;
+    }
+    if (!hasValidPayload) return;
     try {
       setIsExporting(true);
       await onCopyToClipboard();
@@ -139,30 +153,32 @@ export function QRExportActions({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
         <button
           type="button"
-          disabled={!hasValidPayload || isExporting}
+          disabled={isAuthenticated ? (!hasValidPayload || isExporting) : isExporting}
           onClick={handleDownload}
           className={cn(
             'flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-semibold text-white shadow-sm transition select-none cursor-pointer',
-            hasValidPayload && !isExporting
+            (!isAuthenticated || (hasValidPayload && !isExporting))
               ? 'bg-indigo-600 hover:bg-indigo-700 active:scale-[0.99]'
               : 'bg-slate-300 cursor-not-allowed text-slate-500'
           )}
         >
           {isExporting ? (
             <Loader2 className="w-4 h-4 animate-spin" />
+          ) : !isAuthenticated ? (
+            <Lock className="w-4 h-4 text-indigo-200" />
           ) : (
             <Download className="w-4 h-4" />
           )}
-          <span>Download {format.toUpperCase()}</span>
+          <span>{isAuthenticated ? `Download ${format.toUpperCase()}` : `Sign In to Download`}</span>
         </button>
 
         <button
           type="button"
-          disabled={!hasValidPayload || isExporting}
+          disabled={isAuthenticated ? (!hasValidPayload || isExporting) : isExporting}
           onClick={handleCopy}
           className={cn(
             'flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-semibold border transition select-none cursor-pointer',
-            hasValidPayload && !isExporting
+            (!isAuthenticated || (hasValidPayload && !isExporting))
               ? 'bg-white hover:bg-slate-50 text-slate-800 border-slate-200 active:scale-[0.99]'
               : 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed'
           )}
@@ -179,6 +195,21 @@ export function QRExportActions({
             </>
           )}
         </button>
+      </div>
+
+      {/* Cloud History & Auth note */}
+      <div className="pt-0.5 text-center">
+        {!isAuthenticated ? (
+          <p className="text-[11px] text-slate-500 flex items-center justify-center gap-1.5 font-medium">
+            <Lock className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
+            <span>Login required to download & store QR history in cloud</span>
+          </p>
+        ) : (
+          <p className="text-[11px] text-emerald-700 flex items-center justify-center gap-1.5 font-medium">
+            <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+            <span>Downloads are automatically recorded to your personal history</span>
+          </p>
+        )}
       </div>
     </div>
   );

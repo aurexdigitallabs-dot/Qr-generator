@@ -25,7 +25,7 @@ import { MapsForm } from '@/components/qr/forms/MapsForm';
 import { SmsForm } from '@/components/qr/forms/SmsForm';
 
 // Data types & encoders
-import { QRContentType, QRDesignSettings, SavedQRCode, ExportFormat, ExportResolution } from '@/types/qr';
+import { QRContentType, QRDesignSettings, SavedQRCode, QRDownloadHistoryItem, ExportFormat, ExportResolution } from '@/types/qr';
 import { AppUser } from '@/types/auth';
 import { DEFAULT_DESIGN } from '@/lib/qr/presets';
 import { encodePayload } from '@/lib/qr/encoders';
@@ -34,6 +34,10 @@ import {
   saveLocalQRCode,
   deleteLocalQRCode,
   renameLocalQRCode,
+  getLocalDownloadHistory,
+  saveLocalDownloadHistory,
+  deleteLocalDownloadHistory,
+  clearLocalDownloadHistory,
 } from '@/lib/storage/localStorage';
 import { uploadLogoToStorage } from '@/lib/storage/uploadClient';
 import {
@@ -43,6 +47,10 @@ import {
   getQRCodesFromFirestore,
   deleteQRCodeFromFirestore,
   subscribeToUserQRCodes,
+  recordDownloadHistory,
+  subscribeToUserDownloadHistory,
+  deleteDownloadHistoryItem,
+  clearUserDownloadHistory,
 } from '@/lib/firebase/services';
 import { isFirebaseConfigured } from '@/lib/firebase/client';
 import { Bookmark, Sparkles, Shield, ArrowDown, Check } from 'lucide-react';
@@ -54,7 +62,15 @@ export default function HomePage() {
   // Auth state
   const [user, setUser] = useState<AppUser | null>(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [authModalReason, setAuthModalReason] = useState<string | null>(null);
   const [isSavedModalOpen, setIsSavedModalOpen] = useState(false);
+
+  // Pending download stash for auto-resume after sign-in
+  const pendingDownloadRef = useRef<{
+    format: ExportFormat;
+    resolution: ExportResolution;
+    fileName: string;
+  } | null>(null);
 
   // Generator state - Clean start without prefilled demo data
   const [selectedType, setSelectedType] = useState<QRContentType>('url');
@@ -66,8 +82,9 @@ export default function HomePage() {
   const [design, setDesign] = useState<QRDesignSettings>(DEFAULT_DESIGN);
   const [saveName, setSaveName] = useState<string>('');
 
-  // Saved codes state
+  // Saved codes and download history state
   const [savedCodes, setSavedCodes] = useState<SavedQRCode[]>([]);
+  const [downloadHistory, setDownloadHistory] = useState<QRDownloadHistoryItem[]>([]);
 
   // Purge legacy demo mock data from localStorage on mount
   useEffect(() => {
@@ -93,6 +110,7 @@ export default function HomePage() {
   // Listen to Firebase auth changes & maintain real-time Firestore sync
   useEffect(() => {
     let unsubscribeFirestore: (() => void) | null = null;
+    let unsubscribeHistory: (() => void) | null = null;
 
     const unsubscribeAuth = subscribeToAuth((firebaseUser) => {
       if (firebaseUser) {
@@ -110,6 +128,11 @@ export default function HomePage() {
             unsubscribeFirestore();
             unsubscribeFirestore = null;
           }
+          if (unsubscribeHistory) {
+            unsubscribeHistory();
+            unsubscribeHistory = null;
+          }
+
           unsubscribeFirestore = subscribeToUserQRCodes(
             firebaseUser.uid,
             (cloudCodes) => {
@@ -120,6 +143,17 @@ export default function HomePage() {
               setSavedCodes(getLocalSavedQRCodes());
             }
           );
+
+          unsubscribeHistory = subscribeToUserDownloadHistory(
+            firebaseUser.uid,
+            (historyItems) => {
+              setDownloadHistory(historyItems);
+            },
+            (err) => {
+              console.warn('Real-time history sync error, using local storage:', err);
+              setDownloadHistory(getLocalDownloadHistory());
+            }
+          );
         }
       } else {
         setUser(null);
@@ -127,13 +161,19 @@ export default function HomePage() {
           unsubscribeFirestore();
           unsubscribeFirestore = null;
         }
+        if (unsubscribeHistory) {
+          unsubscribeHistory();
+          unsubscribeHistory = null;
+        }
         setSavedCodes(getLocalSavedQRCodes());
+        setDownloadHistory(getLocalDownloadHistory());
       }
     });
 
     return () => {
       unsubscribeAuth();
       if (unsubscribeFirestore) unsubscribeFirestore();
+      if (unsubscribeHistory) unsubscribeHistory();
     };
   }, []);
 
@@ -148,6 +188,7 @@ export default function HomePage() {
       }
     } else {
       setSavedCodes(getLocalSavedQRCodes());
+      setDownloadHistory(getLocalDownloadHistory());
     }
   }, [user]);
 
@@ -248,8 +289,8 @@ export default function HomePage() {
     }
   };
 
-  // Handle loading a saved QR code into the editor
-  const handleLoadCode = (code: SavedQRCode) => {
+  // Handle loading a saved QR code or history item into the editor
+  const handleLoadCode = (code: SavedQRCode | QRDownloadHistoryItem) => {
     setSelectedType(code.type);
     setFormData(code.contentData || {});
     setEncodedPayload(code.encodedString || '');
@@ -347,20 +388,140 @@ export default function HomePage() {
     }
   };
 
-  // Download QR code export
-  const handleDownloadQR = async (format: ExportFormat, resolution: ExportResolution, fileName: string) => {
+  // Download QR code export - Requires Authentication & Stores in user's collection history
+  const handleDownloadQR = async (
+    format: ExportFormat,
+    resolution: ExportResolution,
+    fileName: string
+  ) => {
     if (!previewRef.current) return;
+
+    // Gate: User must be signed in to download
+    if (!user) {
+      pendingDownloadRef.current = { format, resolution, fileName };
+      setAuthModalReason(
+        'Please sign in or create an account to download your QR code and automatically save it to your personal collection history.'
+      );
+      setIsAuthModalOpen(true);
+      info('Please sign in or create an account to download and save your QR code.');
+      return;
+    }
+
     try {
       await previewRef.current.downloadQR(format, resolution, fileName);
-      success(`${format.toUpperCase()} downloaded successfully at ${resolution}px!`);
+
+      // Persist logo to Cloudflare R2 if it is base64 dataUrl
+      let currentDesign = { ...design };
+      if (design.logo?.dataUrl && design.logo.dataUrl.startsWith('data:')) {
+        try {
+          const uploadRes = await uploadLogoToStorage(
+            design.logo.dataUrl,
+            design.logo.fileName || `${fileName}-logo.png`
+          );
+          if (uploadRes.success && uploadRes.url) {
+            currentDesign = {
+              ...design,
+              logo: {
+                ...design.logo,
+                dataUrl: uploadRes.url,
+              },
+            };
+          }
+        } catch (uploadErr) {
+          console.warn('Logo upload to R2 failed during history recording:', uploadErr);
+        }
+      }
+
+      // Record in user's download history collection
+      const historyItem: QRDownloadHistoryItem = {
+        id: `hist-${Date.now()}`,
+        userId: user.uid,
+        name: fileName || saveName || `${selectedType.toUpperCase()} QR`,
+        type: selectedType,
+        contentData: formData,
+        encodedString: encodedPayload,
+        format,
+        resolution,
+        design: currentDesign,
+        logoUrl: currentDesign.logo?.dataUrl,
+        downloadedAt: Date.now(),
+      };
+
+      if (isFirebaseConfigured) {
+        try {
+          await recordDownloadHistory(user.uid, historyItem, currentDesign.logo?.dataUrl);
+        } catch (dbErr) {
+          console.warn('Could not record history in Firestore, storing locally:', dbErr);
+          const updated = saveLocalDownloadHistory(historyItem);
+          setDownloadHistory(updated);
+        }
+      } else {
+        const updated = saveLocalDownloadHistory(historyItem);
+        setDownloadHistory(updated);
+      }
+
+      success(`${format.toUpperCase()} downloaded & stored in your collection history!`);
     } catch (err: any) {
       error(err.message || 'Failed to download QR code.');
+    }
+  };
+
+  // Re-download from history: load design & fire download
+  const handleReDownload = async (item: QRDownloadHistoryItem) => {
+    handleLoadCode(item);
+    setIsSavedModalOpen(false);
+    setTimeout(() => {
+      handleDownloadQR(item.format, item.resolution, item.name);
+    }, 400);
+  };
+
+  // Delete a history item
+  const handleDeleteHistoryItem = async (id: string) => {
+    if (user && isFirebaseConfigured) {
+      try {
+        await deleteDownloadHistoryItem(user.uid, id);
+        info('History item deleted.');
+      } catch {
+        const updated = deleteLocalDownloadHistory(id);
+        setDownloadHistory(updated);
+        info('History item deleted.');
+      }
+    } else {
+      const updated = deleteLocalDownloadHistory(id);
+      setDownloadHistory(updated);
+      info('History item deleted.');
+    }
+  };
+
+  // Clear all download history
+  const handleClearHistory = async () => {
+    if (user && isFirebaseConfigured) {
+      try {
+        await clearUserDownloadHistory(user.uid);
+        setDownloadHistory([]);
+        info('Download history cleared from cloud.');
+      } catch {
+        clearLocalDownloadHistory();
+        setDownloadHistory([]);
+        info('Download history cleared.');
+      }
+    } else {
+      clearLocalDownloadHistory();
+      setDownloadHistory([]);
+      info('Download history cleared.');
     }
   };
 
   // Copy QR image to clipboard
   const handleCopyToClipboard = async () => {
     if (!previewRef.current) return;
+    if (!user) {
+      setAuthModalReason(
+        'Login Required: Please sign in or create an account to copy high-resolution QR codes to your clipboard.'
+      );
+      setIsAuthModalOpen(true);
+      return;
+    }
     try {
       await previewRef.current.copyToClipboard();
       success('QR Code copied to clipboard as image!');
@@ -377,8 +538,12 @@ export default function HomePage() {
       <Header
         user={user}
         savedCount={savedCodes.length}
+        historyCount={downloadHistory.length}
         onOpenSaved={() => setIsSavedModalOpen(true)}
-        onOpenAuth={() => setIsAuthModalOpen(true)}
+        onOpenAuth={() => {
+          setAuthModalReason(null);
+          setIsAuthModalOpen(true);
+        }}
         onSignOut={async () => {
           await logoutUser();
           setUser(null);
@@ -534,11 +699,18 @@ export default function HomePage() {
               typeName={currentTypeConfig?.label || 'QR Code'}
             />
 
-            {/* Export & Download Controls */}
+            {/* Export & Download Controls - Requires Authentication */}
             <QRExportActions
               hasValidPayload={isFormValid}
+              isAuthenticated={Boolean(user)}
               onDownload={handleDownloadQR}
               onCopyToClipboard={handleCopyToClipboard}
+              onRequireAuth={() => {
+                setAuthModalReason(
+                  'Please sign in or create an account to download your QR code and automatically save it to your personal collection history.'
+                );
+                setIsAuthModalOpen(true);
+              }}
             />
           </div>
         </div>
@@ -547,27 +719,50 @@ export default function HomePage() {
       {/* Footer */}
       <Footer />
 
-      {/* Saved QR Codes Modal */}
+      {/* Saved QR Codes Modal (Includes Designs and Download History) */}
       <SavedQRCodesModal
         isOpen={isSavedModalOpen}
         onClose={() => setIsSavedModalOpen(false)}
         savedCodes={savedCodes}
+        downloadHistory={downloadHistory}
         isAuthenticated={Boolean(user)}
         onLoadCode={handleLoadCode}
         onDuplicateCode={handleDuplicateCode}
         onRenameCode={handleRenameCode}
         onDeleteCode={handleDeleteCode}
         onClearAll={handleClearAll}
-        onOpenAuth={() => setIsAuthModalOpen(true)}
+        onDeleteHistoryItem={handleDeleteHistoryItem}
+        onClearHistory={handleClearHistory}
+        onReDownload={handleReDownload}
+        onOpenAuth={() => {
+          setAuthModalReason(null);
+          setIsSavedModalOpen(false);
+          setIsAuthModalOpen(true);
+        }}
       />
 
-      {/* Auth Modal */}
+      {/* Auth Modal with reason and auto-resume download support */}
       <AuthModal
         isOpen={isAuthModalOpen}
-        onClose={() => setIsAuthModalOpen(false)}
+        reason={authModalReason}
+        onClose={() => {
+          setIsAuthModalOpen(false);
+          setAuthModalReason(null);
+        }}
         onSuccess={(msg) => {
           success(msg);
           loadSavedCodes();
+
+          // Auto-resume pending download after successful authentication
+          if (pendingDownloadRef.current) {
+            const pending = pendingDownloadRef.current;
+            pendingDownloadRef.current = null;
+            setAuthModalReason(null);
+            info('Resuming your download...');
+            setTimeout(() => {
+              handleDownloadQR(pending.format, pending.resolution, pending.fileName);
+            }, 400);
+          }
         }}
       />
     </div>
