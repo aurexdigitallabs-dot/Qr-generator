@@ -1,11 +1,11 @@
 import { S3Client, PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
 
-const accountId = process.env.R2_ACCOUNT_ID || '6d2944893413cc4b53c6fed8e1171aab';
+const accountId = process.env.R2_ACCOUNT_ID || '';
 const accessKeyId = process.env.R2_ACCESS_KEY_ID || '';
 const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY || '';
-const bucketName = process.env.R2_BUCKET_NAME || 'qr-generator';
-const endpoint = process.env.R2_ENDPOINT || `https://${accountId}.r2.cloudflarestorage.com`;
-export const publicBaseUrl = process.env.NEXT_PUBLIC_R2_PUBLIC_URL || 'https://pub-0744d662dddc4feb8fc3a798788246d1.r2.dev';
+const bucketName = process.env.R2_BUCKET_NAME || '';
+const endpoint = process.env.R2_ENDPOINT || (accountId ? `https://${accountId}.r2.cloudflarestorage.com` : '');
+export const publicBaseUrl = process.env.NEXT_PUBLIC_R2_PUBLIC_URL || '';
 
 export const isR2Configured = Boolean(accessKeyId && secretAccessKey);
 
