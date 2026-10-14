@@ -163,19 +163,118 @@ export const QRPreview = forwardRef<QRPreviewRef, QRPreviewProps>(function QRPre
       if (!hasValidPayload || !payload) {
         throw new Error('Please enter valid content before downloading.');
       }
+
+      // Sanitize filename and enforce the extension
+      const baseName = (fileName || 'brand-qrcode')
+        .trim()
+        .replace(/\.[^/.]+$/, '')
+        .replace(/[<>:"/\\|?*\x00-\x1F]/g, '_');
+      const safeName = baseName || 'brand-qrcode';
+      const fullFileName = `${safeName}.${format}`;
+
       const QRCodeStyling = (await import('qr-code-styling')).default;
 
       // Build dedicated instance at the target resolution
       const exportOptions = {
         ...buildQROptions(resolution),
+        data: payload,
         type: (format === 'svg' ? 'svg' : 'canvas') as 'svg' | 'canvas',
       };
 
       const exportInstance = new QRCodeStyling(exportOptions);
-      await exportInstance.download({
-        name: fileName.replace(/\.[^/.]+$/, ''),
-        extension: format,
-      });
+
+      let finalBlob: Blob | null = null;
+
+      try {
+        const rawBlob = await exportInstance.getRawData(format);
+        if (rawBlob instanceof Blob) {
+          finalBlob = rawBlob;
+        } else if (rawBlob) {
+          finalBlob = new Blob([new Uint8Array(rawBlob as any)], {
+            type: format === 'svg' ? 'image/svg+xml' : 'image/png',
+          });
+        }
+      } catch (err) {
+        console.warn('exportInstance.getRawData failed, trying element extraction fallback:', err);
+      }
+
+      // Fallback 1: Extract element from exportInstance
+      if (!finalBlob) {
+        try {
+          const el = await (exportInstance as any)._getElement(format);
+          if (el) {
+            if (format === 'svg') {
+              const svgString = new XMLSerializer().serializeToString(el);
+              finalBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+            } else if ('toBlob' in el) {
+              finalBlob = await new Promise<Blob | null>((resolve) => {
+                (el as HTMLCanvasElement).toBlob((b) => resolve(b), 'image/png', 1.0);
+              });
+            }
+          }
+        } catch (elErr) {
+          console.warn('Element extraction fallback failed:', elErr);
+        }
+      }
+
+      // Fallback 2: Active on-screen canvas/SVG clone
+      if (!finalBlob) {
+        try {
+          if (format === 'svg') {
+            const svgNode = canvasContainerRef.current?.querySelector('svg');
+            if (svgNode) {
+              const svgString = new XMLSerializer().serializeToString(svgNode);
+              finalBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+            }
+          } else {
+            const canvasNode = canvasContainerRef.current?.querySelector('canvas');
+            if (canvasNode) {
+              const offCanvas = document.createElement('canvas');
+              offCanvas.width = resolution;
+              offCanvas.height = resolution;
+              const ctx = offCanvas.getContext('2d');
+              if (ctx) {
+                ctx.imageSmoothingEnabled = false;
+                ctx.drawImage(canvasNode, 0, 0, resolution, resolution);
+                finalBlob = await new Promise<Blob | null>((resolve) => {
+                  offCanvas.toBlob((b) => resolve(b), 'image/png', 1.0);
+                });
+              }
+            }
+          }
+        } catch (canvasErr) {
+          console.warn('Canvas clone fallback failed:', canvasErr);
+        }
+      }
+
+      if (!finalBlob) {
+        throw new Error('Unable to render QR code image data for download.');
+      }
+
+      // Safe, cross-browser download with explicit file name and extension
+      const blobUrl = URL.createObjectURL(finalBlob);
+      const downloadLink = document.createElement('a');
+      downloadLink.style.position = 'fixed';
+      downloadLink.style.left = '-9999px';
+      downloadLink.style.top = '-9999px';
+      downloadLink.style.opacity = '0';
+      downloadLink.href = blobUrl;
+      downloadLink.download = fullFileName;
+      downloadLink.setAttribute('download', fullFileName);
+      // NOTE: Do NOT set downloadLink.target ('_self' or '_blank') as it causes Chromium to treat it as a navigation and ignore the download attribute!
+
+      document.body.appendChild(downloadLink);
+
+      // Trigger native click (recognized as trusted download trigger by Chromium/WebKit)
+      downloadLink.click();
+
+      // Retain link in DOM briefly so Chromium/WebKit don't lose the download attribute before dispatching to download shelf
+      setTimeout(() => {
+        if (downloadLink.parentNode) {
+          downloadLink.parentNode.removeChild(downloadLink);
+        }
+        URL.revokeObjectURL(blobUrl);
+      }, 15000);
     },
 
     async copyToClipboard() {
