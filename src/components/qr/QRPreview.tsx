@@ -251,30 +251,99 @@ export const QRPreview = forwardRef<QRPreviewRef, QRPreviewProps>(function QRPre
         throw new Error('Unable to render QR code image data for download.');
       }
 
-      // Safe, cross-browser download with explicit file name and extension
-      const blobUrl = URL.createObjectURL(finalBlob);
-      const downloadLink = document.createElement('a');
-      downloadLink.style.position = 'fixed';
-      downloadLink.style.left = '-9999px';
-      downloadLink.style.top = '-9999px';
-      downloadLink.style.opacity = '0';
-      downloadLink.href = blobUrl;
-      downloadLink.download = fullFileName;
-      downloadLink.setAttribute('download', fullFileName);
-      // NOTE: Do NOT set downloadLink.target ('_self' or '_blank') as it causes Chromium to treat it as a navigation and ignore the download attribute!
+      // Convert Blob to Data URL so it can be streamed via HTTP API or downloaded directly without Blob UUID issues
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          if (typeof reader.result === 'string') {
+            resolve(reader.result);
+          } else {
+            reject(new Error('Failed to convert QR code blob to data URL'));
+          }
+        };
+        reader.onerror = () => reject(reader.error || new Error('FileReader error'));
+        reader.readAsDataURL(finalBlob!);
+      });
 
-      document.body.appendChild(downloadLink);
+      // --- Downloader Engine 1: Server-side HTTP Attachment Streamer (/api/download) ---
+      // This is the gold standard: Sends a native HTTP response with "Content-Disposition: attachment; filename=..."
+      // Completely bypasses browser blob-URL bugs, IDM/download-manager UUID overwrites, and extension-stripping.
+      let downloadSucceeded = false;
+      try {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/api/download';
+        form.style.position = 'fixed';
+        form.style.left = '-9999px';
+        form.style.top = '-9999px';
+        form.style.opacity = '0';
 
-      // Trigger native click (recognized as trusted download trigger by Chromium/WebKit)
-      downloadLink.click();
+        const nameInput = document.createElement('input');
+        nameInput.type = 'hidden';
+        nameInput.name = 'fileName';
+        nameInput.value = fullFileName;
+        form.appendChild(nameInput);
 
-      // Retain link in DOM briefly so Chromium/WebKit don't lose the download attribute before dispatching to download shelf
-      setTimeout(() => {
-        if (downloadLink.parentNode) {
-          downloadLink.parentNode.removeChild(downloadLink);
+        const typeInput = document.createElement('input');
+        typeInput.type = 'hidden';
+        typeInput.name = 'mimeType';
+        typeInput.value = format === 'svg' ? 'image/svg+xml' : 'image/png';
+        form.appendChild(typeInput);
+
+        const dataInput = document.createElement('input');
+        dataInput.type = 'hidden';
+        dataInput.name = 'data';
+        dataInput.value = dataUrl;
+        form.appendChild(dataInput);
+
+        document.body.appendChild(form);
+        form.submit();
+        downloadSucceeded = true;
+
+        setTimeout(() => {
+          if (form.parentNode) {
+            form.parentNode.removeChild(form);
+          }
+        }, 3000);
+      } catch (streamErr) {
+        console.warn('HTTP attachment stream engine failed, falling back to Data URL engine:', streamErr);
+      }
+
+      // --- Downloader Engine 2: Direct Data URL anchor fallback ---
+      // If HTTP form could not be dispatched, use data: URL (has NO blob UUID in URI)
+      if (!downloadSucceeded) {
+        try {
+          const downloadLink = document.createElement('a');
+          downloadLink.style.position = 'fixed';
+          downloadLink.style.left = '-9999px';
+          downloadLink.style.opacity = '0';
+          downloadLink.href = dataUrl;
+          downloadLink.download = fullFileName;
+          downloadLink.setAttribute('download', fullFileName);
+          document.body.appendChild(downloadLink);
+          downloadLink.click();
+          downloadSucceeded = true;
+          setTimeout(() => {
+            if (downloadLink.parentNode) {
+              downloadLink.parentNode.removeChild(downloadLink);
+            }
+          }, 3000);
+        } catch (dataUrlErr) {
+          console.warn('Data URL engine failed, falling back to file-saver:', dataUrlErr);
         }
-        URL.revokeObjectURL(blobUrl);
-      }, 15000);
+      }
+
+      // --- Downloader Engine 3: file-saver library fallback ---
+      if (!downloadSucceeded) {
+        try {
+          const { saveAs } = await import('file-saver');
+          saveAs(finalBlob, fullFileName);
+          downloadSucceeded = true;
+        } catch (fsErr) {
+          console.error('All download engines failed:', fsErr);
+          throw new Error('Unable to trigger file download in this browser.');
+        }
+      }
     },
 
     async copyToClipboard() {
