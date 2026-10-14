@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState, useImperativeHandle, forwardRef } f
 import { QRDesignSettings, ExportFormat, ExportResolution, ReliabilityReport } from '@/types/qr';
 import { evaluateScanReliability } from '@/lib/qr/reliability';
 import { ScanReliabilityMeter } from './ScanReliabilityMeter';
-import { Smartphone, Monitor, QrCode, AlertCircle, Sparkles } from 'lucide-react';
+import { Smartphone, Monitor, AlertCircle, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export interface QRPreviewRef {
@@ -23,10 +23,13 @@ export const QRPreview = forwardRef<QRPreviewRef, QRPreviewProps>(function QRPre
   { payload, hasValidPayload, design, typeName },
   ref
 ) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const qrInstanceRef = useRef<any>(null);
+  const canvasContainerRef = useRef<HTMLDivElement>(null);
+  const phoneContainerRef = useRef<HTMLDivElement>(null);
+  const canvasQRRef = useRef<any>(null);
+  const phoneQRRef = useRef<any>(null);
+
   const [viewMode, setViewMode] = useState<'canvas' | 'phone'>('canvas');
-  const [isRendering, setIsRendering] = useState(false);
+  const [, setIsRendering] = useState(false);
 
   // Compute live scan reliability
   const reliabilityReport: ReliabilityReport = evaluateScanReliability(payload, design);
@@ -84,7 +87,7 @@ export const QRPreview = forwardRef<QRPreviewRef, QRPreviewProps>(function QRPre
     };
   };
 
-  // Mount & Update QR Code in preview container
+  // Mount & Update both Canvas and Phone QR previews simultaneously
   useEffect(() => {
     let isMounted = true;
 
@@ -97,16 +100,28 @@ export const QRPreview = forwardRef<QRPreviewRef, QRPreviewProps>(function QRPre
 
         if (!isMounted) return;
 
-        const options = buildQROptions(300);
-
-        if (!qrInstanceRef.current) {
-          qrInstanceRef.current = new QRCodeStyling(options);
-          if (containerRef.current) {
-            containerRef.current.innerHTML = '';
-            qrInstanceRef.current.append(containerRef.current);
+        // Render Canvas view
+        if (canvasContainerRef.current) {
+          const canvasOptions = buildQROptions(300);
+          if (!canvasQRRef.current || !canvasContainerRef.current.children.length) {
+            canvasContainerRef.current.innerHTML = '';
+            canvasQRRef.current = new QRCodeStyling(canvasOptions);
+            canvasQRRef.current.append(canvasContainerRef.current);
+          } else {
+            canvasQRRef.current.update(canvasOptions);
           }
-        } else {
-          qrInstanceRef.current.update(options);
+        }
+
+        // Render Phone view
+        if (phoneContainerRef.current) {
+          const phoneOptions = buildQROptions(220);
+          if (!phoneQRRef.current || !phoneContainerRef.current.children.length) {
+            phoneContainerRef.current.innerHTML = '';
+            phoneQRRef.current = new QRCodeStyling(phoneOptions);
+            phoneQRRef.current.append(phoneContainerRef.current);
+          } else {
+            phoneQRRef.current.update(phoneOptions);
+          }
         }
       } catch (err) {
         console.error('Error generating QR code preview:', err);
@@ -214,7 +229,7 @@ export const QRPreview = forwardRef<QRPreviewRef, QRPreviewProps>(function QRPre
               type="button"
               onClick={() => setViewMode('canvas')}
               className={cn(
-                'flex items-center gap-1.5 px-2.5 py-1 rounded-lg transition',
+                'flex items-center gap-1.5 px-2.5 py-1 rounded-lg transition cursor-pointer',
                 viewMode === 'canvas' ? 'bg-white text-slate-900 shadow-2xs font-semibold' : 'hover:text-slate-900'
               )}
             >
@@ -225,7 +240,7 @@ export const QRPreview = forwardRef<QRPreviewRef, QRPreviewProps>(function QRPre
               type="button"
               onClick={() => setViewMode('phone')}
               className={cn(
-                'flex items-center gap-1.5 px-2.5 py-1 rounded-lg transition',
+                'flex items-center gap-1.5 px-2.5 py-1 rounded-lg transition cursor-pointer',
                 viewMode === 'phone' ? 'bg-white text-slate-900 shadow-2xs font-semibold' : 'hover:text-slate-900'
               )}
             >
@@ -237,8 +252,8 @@ export const QRPreview = forwardRef<QRPreviewRef, QRPreviewProps>(function QRPre
 
         {/* Center Stage Preview Area */}
         <div className="flex items-center justify-center p-3 sm:p-6 bg-slate-50/70 rounded-2xl border border-slate-100 min-h-[340px] relative overflow-hidden">
-          {/* Flat Canvas View */}
-          {viewMode === 'canvas' && (
+          {/* Flat Canvas View - Always in DOM, toggled via CSS */}
+          <div className={cn(viewMode === 'canvas' ? 'flex' : 'hidden', 'items-center justify-center w-full')}>
             <div
               className={cn(
                 'relative p-4 rounded-2xl shadow-md transition-all flex items-center justify-center',
@@ -249,14 +264,14 @@ export const QRPreview = forwardRef<QRPreviewRef, QRPreviewProps>(function QRPre
               }}
             >
               <div
-                ref={containerRef}
-                className="w-[260px] h-[260px] sm:w-[280px] sm:h-[280px] flex items-center justify-center overflow-hidden"
+                ref={canvasContainerRef}
+                className="w-[260px] h-[260px] sm:w-[280px] sm:h-[280px] flex items-center justify-center overflow-hidden [&_canvas]:w-full [&_canvas]:h-full [&_canvas]:object-contain"
               />
             </div>
-          )}
+          </div>
 
-          {/* Phone Frame Mockup */}
-          {viewMode === 'phone' && (
+          {/* Phone Frame Mockup View - Always in DOM, toggled via CSS */}
+          <div className={cn(viewMode === 'phone' ? 'flex' : 'hidden', 'items-center justify-center w-full')}>
             <div className="w-[280px] bg-slate-900 text-white rounded-[40px] p-4 shadow-xl border-4 border-slate-800 flex flex-col items-center">
               {/* Notch / Dynamic Island */}
               <div className="w-24 h-4 bg-black rounded-full mb-3" />
@@ -271,14 +286,14 @@ export const QRPreview = forwardRef<QRPreviewRef, QRPreviewProps>(function QRPre
 
               {/* QR Container Inside Phone */}
               <div
-                className="p-3 rounded-2xl shadow-sm mb-3"
+                className="p-3 rounded-2xl shadow-sm mb-3 flex items-center justify-center"
                 style={{
                   backgroundColor: design.backgroundTransparent ? '#FFFFFF' : design.backgroundColor,
                 }}
               >
                 <div
-                  ref={containerRef}
-                  className="w-[200px] h-[200px] flex items-center justify-center overflow-hidden"
+                  ref={phoneContainerRef}
+                  className="w-[200px] h-[200px] flex items-center justify-center overflow-hidden [&_canvas]:w-full [&_canvas]:h-full [&_canvas]:object-contain"
                 />
               </div>
 
@@ -288,7 +303,7 @@ export const QRPreview = forwardRef<QRPreviewRef, QRPreviewProps>(function QRPre
                 </span>
               </div>
             </div>
-          )}
+          </div>
 
           {/* Invalid or Empty State Overlay Warning */}
           {!hasValidPayload && (
