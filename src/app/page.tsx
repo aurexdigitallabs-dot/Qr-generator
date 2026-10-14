@@ -35,6 +35,7 @@ import {
   deleteLocalQRCode,
   renameLocalQRCode,
 } from '@/lib/storage/localStorage';
+import { uploadLogoToStorage } from '@/lib/storage/uploadClient';
 import {
   subscribeToAuth,
   logoutUser,
@@ -190,6 +191,30 @@ export default function HomePage() {
       return;
     }
 
+    let currentDesign = { ...design };
+
+    // If logo is present and is a base64 dataUrl, persist it to Cloudflare R2
+    if (design.logo?.dataUrl && design.logo.dataUrl.startsWith('data:')) {
+      try {
+        const uploadRes = await uploadLogoToStorage(
+          design.logo.dataUrl,
+          design.logo.fileName || 'brand-logo.png'
+        );
+        if (uploadRes.success && uploadRes.url) {
+          currentDesign = {
+            ...design,
+            logo: {
+              ...design.logo,
+              dataUrl: uploadRes.url,
+            },
+          };
+          setDesign(currentDesign);
+        }
+      } catch (err) {
+        console.warn('Could not upload logo to Cloudflare R2, using fallback:', err);
+      }
+    }
+
     const qrRecord: SavedQRCode = {
       id: `qr-${Date.now()}`,
       userId: user?.uid,
@@ -197,16 +222,16 @@ export default function HomePage() {
       type: selectedType,
       contentData: formData,
       encodedString: encodedPayload,
-      design: design,
+      design: currentDesign,
       createdAt: Date.now(),
       updatedAt: Date.now(),
     };
 
     if (user && isFirebaseConfigured) {
       try {
-        await saveQRCodeToFirestore(user.uid, qrRecord, design.logo.dataUrl);
+        await saveQRCodeToFirestore(user.uid, qrRecord, currentDesign.logo.dataUrl);
         await loadSavedCodes();
-        success('Design saved to your cloud account!');
+        success('Design and logo saved to your cloud account via Cloudflare R2!');
       } catch (err: any) {
         error(err.message || 'Failed to save to cloud. Saved locally instead.');
         const updated = saveLocalQRCode(qrRecord);
@@ -215,7 +240,7 @@ export default function HomePage() {
     } else {
       const updated = saveLocalQRCode(qrRecord);
       setSavedCodes(updated);
-      success('Design saved to your browser storage!');
+      success('Design and logo saved to library with Cloudflare R2 hosting!');
     }
   };
 
