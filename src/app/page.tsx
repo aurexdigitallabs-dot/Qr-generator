@@ -42,6 +42,7 @@ import {
   saveQRCodeToFirestore,
   getQRCodesFromFirestore,
   deleteQRCodeFromFirestore,
+  subscribeToUserQRCodes,
 } from '@/lib/firebase/services';
 import { isFirebaseConfigured } from '@/lib/firebase/client';
 import { Bookmark, Sparkles, Shield, ArrowDown, Check } from 'lucide-react';
@@ -55,58 +56,100 @@ export default function HomePage() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isSavedModalOpen, setIsSavedModalOpen] = useState(false);
 
-  // Generator state
+  // Generator state - Clean start without prefilled demo data
   const [selectedType, setSelectedType] = useState<QRContentType>('url');
-  const [formData, setFormData] = useState<Record<string, any>>({
-    url: 'https://google.com',
-  });
-  const [isFormValid, setIsFormValid] = useState<boolean>(true);
-  const [encodedPayload, setEncodedPayload] = useState<string>('https://google.com');
+  const [formData, setFormData] = useState<Record<string, any>>({});
+  const [isFormValid, setIsFormValid] = useState<boolean>(false);
+  const [encodedPayload, setEncodedPayload] = useState<string>('');
 
   // Design state
   const [design, setDesign] = useState<QRDesignSettings>(DEFAULT_DESIGN);
-  const [saveName, setSaveName] = useState<string>('My Brand QR');
+  const [saveName, setSaveName] = useState<string>('');
 
   // Saved codes state
   const [savedCodes, setSavedCodes] = useState<SavedQRCode[]>([]);
 
-  // Listen to Firebase auth changes
+  // Purge legacy demo mock data from localStorage on mount
   useEffect(() => {
-    const unsubscribe = subscribeToAuth((firebaseUser) => {
+    if (typeof window !== 'undefined') {
+      try {
+        const local = getLocalSavedQRCodes();
+        const filtered = local.filter(
+          (c) =>
+            !c.name.toLowerCase().includes('demo') &&
+            !c.encodedString.includes('example.com') &&
+            !c.encodedString.includes('google.com')
+        );
+        if (filtered.length !== local.length) {
+          localStorage.setItem('qr_brand_studio_saved_codes_v1', JSON.stringify(filtered));
+          setSavedCodes(filtered);
+        }
+      } catch (e) {
+        console.warn('LocalStorage cleanup:', e);
+      }
+    }
+  }, []);
+
+  // Listen to Firebase auth changes & maintain real-time Firestore sync
+  useEffect(() => {
+    let unsubscribeFirestore: (() => void) | null = null;
+
+    const unsubscribeAuth = subscribeToAuth((firebaseUser) => {
       if (firebaseUser) {
-        setUser({
+        const currentUser: AppUser = {
           uid: firebaseUser.uid,
           email: firebaseUser.email,
           displayName: firebaseUser.displayName,
           photoURL: firebaseUser.photoURL,
-        });
+        };
+        setUser(currentUser);
+
+        // Real-time synchronization with Cloud Firestore
+        if (isFirebaseConfigured) {
+          if (unsubscribeFirestore) {
+            unsubscribeFirestore();
+            unsubscribeFirestore = null;
+          }
+          unsubscribeFirestore = subscribeToUserQRCodes(
+            firebaseUser.uid,
+            (cloudCodes) => {
+              setSavedCodes(cloudCodes);
+            },
+            (err) => {
+              console.warn('Real-time sync error, using local storage:', err);
+              setSavedCodes(getLocalSavedQRCodes());
+            }
+          );
+        }
       } else {
         setUser(null);
+        if (unsubscribeFirestore) {
+          unsubscribeFirestore();
+          unsubscribeFirestore = null;
+        }
+        setSavedCodes(getLocalSavedQRCodes());
       }
     });
 
-    return () => unsubscribe();
+    return () => {
+      unsubscribeAuth();
+      if (unsubscribeFirestore) unsubscribeFirestore();
+    };
   }, []);
 
-  // Sync saved QR codes when user changes
+  // Sync saved QR codes helper
   const loadSavedCodes = useCallback(async () => {
     if (user && isFirebaseConfigured) {
       try {
         const cloudCodes = await getQRCodesFromFirestore(user.uid);
         setSavedCodes(cloudCodes);
       } catch {
-        const local = getLocalSavedQRCodes();
-        setSavedCodes(local);
+        setSavedCodes(getLocalSavedQRCodes());
       }
     } else {
-      const local = getLocalSavedQRCodes();
-      setSavedCodes(local);
+      setSavedCodes(getLocalSavedQRCodes());
     }
   }, [user]);
-
-  useEffect(() => {
-    loadSavedCodes();
-  }, [loadSavedCodes]);
 
   const lastDataRef = useRef<string>('');
 
@@ -131,51 +174,12 @@ export default function HomePage() {
     [selectedType]
   );
 
-  // Switch type and initialize default data for that type
+  // Switch type and initialize clean state for that type
   const handleTypeSelect = (type: QRContentType) => {
     setSelectedType(type);
-    let initialTypeData: Record<string, any> = {};
-
-    switch (type) {
-      case 'url':
-        initialTypeData = { url: 'https://google.com' };
-        break;
-      case 'text':
-        initialTypeData = { text: 'Welcome to Brand QR Studio' };
-        break;
-      case 'email':
-        initialTypeData = { email: 'hello@example.com', subject: 'Inquiry', body: 'Hi!' };
-        break;
-      case 'phone':
-        initialTypeData = { phone: '+1 555 234 5678' };
-        break;
-      case 'wifi':
-        initialTypeData = { ssid: 'Guest-WiFi', password: 'Password123', encryption: 'WPA' };
-        break;
-      case 'vcard':
-        initialTypeData = { firstName: 'Alex', lastName: 'Morgan', organization: 'Design Studio' };
-        break;
-      case 'whatsapp':
-        initialTypeData = { phone: '+1 555 987 6543', message: 'Hello! I saw your QR code.' };
-        break;
-      case 'instagram':
-        initialTypeData = { username: 'studio' };
-        break;
-      case 'youtube':
-        initialTypeData = { url: 'https://www.youtube.com/@veritasium' };
-        break;
-      case 'maps':
-        initialTypeData = { query: 'Times Square, New York' };
-        break;
-      case 'sms':
-        initialTypeData = { phone: '+1 555 765 4321', message: 'PROMO CODE' };
-        break;
-    }
-
-    setFormData(initialTypeData);
-    const initialPayload = encodePayload(type, initialTypeData);
-    setEncodedPayload(initialPayload);
-    setIsFormValid(true);
+    setFormData({});
+    setEncodedPayload('');
+    setIsFormValid(false);
   };
 
   // Reset design settings to defaults
@@ -319,6 +323,27 @@ export default function HomePage() {
       const updated = deleteLocalQRCode(id);
       setSavedCodes(updated);
       info('QR code deleted.');
+    }
+  };
+
+  // Handle wiping all saved designs
+  const handleClearAll = async () => {
+    if (user && isFirebaseConfigured) {
+      try {
+        for (const code of savedCodes) {
+          await deleteQRCodeFromFirestore(user.uid, code.id);
+        }
+        setSavedCodes([]);
+        info('All saved designs cleared from cloud.');
+      } catch {
+        localStorage.removeItem('qr_brand_studio_saved_codes_v1');
+        setSavedCodes([]);
+        info('All saved designs cleared.');
+      }
+    } else {
+      localStorage.removeItem('qr_brand_studio_saved_codes_v1');
+      setSavedCodes([]);
+      info('All saved designs cleared.');
     }
   };
 
@@ -532,6 +557,7 @@ export default function HomePage() {
         onDuplicateCode={handleDuplicateCode}
         onRenameCode={handleRenameCode}
         onDeleteCode={handleDeleteCode}
+        onClearAll={handleClearAll}
         onOpenAuth={() => setIsAuthModalOpen(true)}
       />
 

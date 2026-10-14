@@ -20,7 +20,7 @@ export function UrlForm({ initialData, onChange }: UrlFormProps) {
     resolver: zodResolver(urlSchema),
     mode: 'onChange',
     defaultValues: {
-      url: initialData?.url || 'https://google.com',
+      url: initialData?.url ?? '',
     },
   });
 

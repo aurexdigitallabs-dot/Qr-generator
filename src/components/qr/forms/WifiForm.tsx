@@ -40,8 +40,8 @@ export function WifiForm({ initialData, onChange }: WifiFormProps) {
     resolver: zodResolver(wifiSchema),
     mode: 'onChange',
     defaultValues: {
-      ssid: initialData?.ssid || 'Office-Guest-WiFi',
-      password: initialData?.password || 'SecurePass2026',
+      ssid: initialData?.ssid ?? '',
+      password: initialData?.password ?? '',
       encryption: initialData?.encryption || 'WPA',
       hidden: initialData?.hidden || false,
     },

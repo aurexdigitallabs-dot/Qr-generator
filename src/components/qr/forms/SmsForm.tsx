@@ -20,8 +20,8 @@ export function SmsForm({ initialData, onChange }: SmsFormProps) {
     resolver: zodResolver(smsSchema),
     mode: 'onChange',
     defaultValues: {
-      phone: initialData?.phone || '+1 555 765 4321',
-      message: initialData?.message || 'JOIN VIP',
+      phone: initialData?.phone ?? '',
+      message: initialData?.message ?? '',
     },
   });
 

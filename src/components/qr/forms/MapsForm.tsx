@@ -20,7 +20,7 @@ export function MapsForm({ initialData, onChange }: MapsFormProps) {
     resolver: zodResolver(mapsSchema),
     mode: 'onChange',
     defaultValues: {
-      query: initialData?.query || 'Eiffel Tower, Paris, France',
+      query: initialData?.query ?? '',
       latitude: initialData?.latitude || '',
       longitude: initialData?.longitude || '',
     },

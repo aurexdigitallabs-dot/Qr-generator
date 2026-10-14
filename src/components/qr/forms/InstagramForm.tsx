@@ -20,7 +20,7 @@ export function InstagramForm({ initialData, onChange }: InstagramFormProps) {
     resolver: zodResolver(instagramSchema),
     mode: 'onChange',
     defaultValues: {
-      username: initialData?.username || 'designers',
+      username: initialData?.username ?? '',
     },
   });
 

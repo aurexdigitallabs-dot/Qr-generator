@@ -20,8 +20,8 @@ export function WhatsappForm({ initialData, onChange }: WhatsappFormProps) {
     resolver: zodResolver(whatsappSchema),
     mode: 'onChange',
     defaultValues: {
-      phone: initialData?.phone || '+1 555 987 6543',
-      message: initialData?.message || 'Hello! I am inquiring about your services.',
+      phone: initialData?.phone ?? '',
+      message: initialData?.message ?? '',
     },
   });
 

@@ -20,7 +20,7 @@ export function PhoneForm({ initialData, onChange }: PhoneFormProps) {
     resolver: zodResolver(phoneSchema),
     mode: 'onChange',
     defaultValues: {
-      phone: initialData?.phone || '+1 555 234 5678',
+      phone: initialData?.phone ?? '',
     },
   });
 

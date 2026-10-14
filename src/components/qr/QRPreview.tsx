@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState, useImperativeHandle, forwardRef } f
 import { QRDesignSettings, ExportFormat, ExportResolution, ReliabilityReport } from '@/types/qr';
 import { evaluateScanReliability } from '@/lib/qr/reliability';
 import { ScanReliabilityMeter } from './ScanReliabilityMeter';
-import { Smartphone, Monitor, AlertCircle, Sparkles } from 'lucide-react';
+import { Smartphone, Monitor, AlertCircle, Sparkles, QrCode } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export interface QRPreviewRef {
@@ -160,6 +160,9 @@ export const QRPreview = forwardRef<QRPreviewRef, QRPreviewProps>(function QRPre
   useImperativeHandle(ref, () => ({
     async downloadQR(format: ExportFormat, resolution: ExportResolution, fileName: string) {
       if (typeof window === 'undefined') return;
+      if (!hasValidPayload || !payload) {
+        throw new Error('Please enter valid content before downloading.');
+      }
       const QRCodeStyling = (await import('qr-code-styling')).default;
 
       // Build dedicated instance at the target resolution
@@ -177,6 +180,9 @@ export const QRPreview = forwardRef<QRPreviewRef, QRPreviewProps>(function QRPre
 
     async copyToClipboard() {
       if (typeof window === 'undefined') return;
+      if (!hasValidPayload || !payload) {
+        throw new Error('Please enter valid content before copying.');
+      }
       const QRCodeStyling = (await import('qr-code-styling')).default;
 
       const exportOptions = {
@@ -305,18 +311,34 @@ export const QRPreview = forwardRef<QRPreviewRef, QRPreviewProps>(function QRPre
             </div>
           </div>
 
-          {/* Invalid or Empty State Overlay Warning */}
+          {/* Invalid or Empty State Overlay */}
           {!hasValidPayload && (
-            <div className="absolute inset-0 bg-white/90 backdrop-blur-xs flex flex-col items-center justify-center p-6 text-center z-10">
-              <div className="w-12 h-12 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center mb-3 border border-amber-200">
-                <AlertCircle className="w-6 h-6" />
-              </div>
-              <p className="text-sm font-semibold text-slate-900">
-                Incomplete or Invalid Content
-              </p>
-              <p className="text-xs text-slate-500 max-w-xs mt-1">
-                Fill in the required fields on the left to generate and scan your live QR code.
-              </p>
+            <div className="absolute inset-0 bg-white/95 backdrop-blur-xs flex flex-col items-center justify-center p-6 text-center z-10 transition-opacity">
+              {!payload || payload.trim() === '' ? (
+                <>
+                  <div className="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-3 border border-indigo-100 shadow-2xs">
+                    <QrCode className="w-7 h-7 stroke-[1.5]" />
+                  </div>
+                  <p className="text-sm font-bold text-slate-900">
+                    Awaiting QR Content
+                  </p>
+                  <p className="text-xs text-slate-500 max-w-xs mt-1 leading-relaxed">
+                    Enter your destination details on the left to generate and preview your branded QR code in real-time.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <div className="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mb-3 border border-amber-200 shadow-2xs">
+                    <AlertCircle className="w-7 h-7 stroke-[1.5]" />
+                  </div>
+                  <p className="text-sm font-bold text-slate-900">
+                    Incomplete or Invalid Input
+                  </p>
+                  <p className="text-xs text-slate-500 max-w-xs mt-1 leading-relaxed">
+                    Please complete the required fields on the left to generate your scannable code.
+                  </p>
+                </>
+              )}
             </div>
           )}
         </div>

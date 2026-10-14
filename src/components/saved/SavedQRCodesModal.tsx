@@ -26,6 +26,7 @@ interface SavedQRCodesModalProps {
   onDuplicateCode: (code: SavedQRCode) => void;
   onRenameCode: (id: string, newName: string) => void;
   onDeleteCode: (id: string) => void;
+  onClearAll?: () => void;
   onOpenAuth: () => void;
 }
 
@@ -38,11 +39,13 @@ export function SavedQRCodesModal({
   onDuplicateCode,
   onRenameCode,
   onDeleteCode,
+  onClearAll,
   onOpenAuth,
 }: SavedQRCodesModalProps) {
   const [search, setSearch] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
+  const [isConfirmingClearAll, setIsConfirmingClearAll] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   const filteredCodes = savedCodes.filter(
@@ -97,18 +100,55 @@ export function SavedQRCodesModal({
           </div>
         )}
 
-        {/* Search Bar */}
-        <div className="relative">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-            <Search className="w-4 h-4" />
+        {/* Search Bar & Clear All Action */}
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+              <Search className="w-4 h-4" />
+            </div>
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search by name, type, or destination link..."
+              className="block w-full pl-9 pr-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:bg-white transition"
+            />
           </div>
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by name, type, or destination link..."
-            className="block w-full pl-9 pr-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:bg-white transition"
-          />
+
+          {onClearAll && savedCodes.length > 0 && (
+            <div>
+              {isConfirmingClearAll ? (
+                <div className="flex items-center gap-1 bg-rose-50 border border-rose-200 p-1 rounded-xl">
+                  <span className="text-[11px] text-rose-700 font-semibold px-1">Wipe all?</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onClearAll();
+                      setIsConfirmingClearAll(false);
+                    }}
+                    className="px-2 py-1 bg-rose-600 text-white rounded-lg text-xs font-bold hover:bg-rose-700 transition"
+                  >
+                    Yes
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsConfirmingClearAll(false)}
+                    className="px-2 py-1 bg-slate-200 text-slate-700 rounded-lg text-xs hover:bg-slate-300 transition"
+                  >
+                    No
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setIsConfirmingClearAll(true)}
+                  className="px-3 py-2 text-xs font-semibold text-rose-600 hover:text-rose-700 hover:bg-rose-50 border border-rose-200 rounded-xl transition shrink-0"
+                >
+                  Clear All
+                </button>
+              )}
+            </div>
+          )}
         </div>
 
         {/* List of saved QR codes */}

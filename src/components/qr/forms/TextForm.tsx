@@ -20,7 +20,7 @@ export function TextForm({ initialData, onChange }: TextFormProps) {
     resolver: zodResolver(textSchema),
     mode: 'onChange',
     defaultValues: {
-      text: initialData?.text || 'Hello! Welcome to our store.',
+      text: initialData?.text ?? '',
     },
   });
 

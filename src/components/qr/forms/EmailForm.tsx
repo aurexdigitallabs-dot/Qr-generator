@@ -20,9 +20,9 @@ export function EmailForm({ initialData, onChange }: EmailFormProps) {
     resolver: zodResolver(emailSchema),
     mode: 'onChange',
     defaultValues: {
-      email: initialData?.email || 'support@example.com',
-      subject: initialData?.subject || 'Product Inquiry',
-      body: initialData?.body || 'Hi, I would like more information about...',
+      email: initialData?.email ?? '',
+      subject: initialData?.subject ?? '',
+      body: initialData?.body ?? '',
     },
   });
 

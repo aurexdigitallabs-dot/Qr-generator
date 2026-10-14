@@ -8,9 +8,10 @@ import {
   loginWithEmail,
   registerWithEmail,
   resetPassword,
+  formatAuthError,
 } from '@/lib/firebase/services';
 import { isFirebaseConfigured } from '@/lib/firebase/client';
-import { Mail, Lock, AlertCircle, CheckCircle2, Loader2, Info } from 'lucide-react';
+import { Mail, Lock, AlertCircle, CheckCircle2, Loader2, Info, ShieldCheck } from 'lucide-react';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -41,7 +42,7 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
   const handleGoogleSignIn = async () => {
     if (!isFirebaseConfigured) {
       setErrorMessage(
-        'Firebase credentials are not configured yet in environment variables (.env.local). You can continue generating, customizing, and downloading in Guest Mode!'
+        'Firebase credentials are not configured yet in .env.local.'
       );
       return;
     }
@@ -54,9 +55,9 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
       handleClose();
     } catch (err: any) {
       if (err.code === 'auth/popup-closed-by-user') {
-        // user closed popup, no error needed
+        // user closed popup cleanly
       } else {
-        setErrorMessage(err.message || 'Failed to sign in with Google');
+        setErrorMessage(formatAuthError(err));
       }
     } finally {
       setIsLoading(false);
@@ -67,9 +68,7 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
     e.preventDefault();
 
     if (!isFirebaseConfigured) {
-      setErrorMessage(
-        'Firebase credentials are not configured yet in .env.local. Add NEXT_PUBLIC_FIREBASE_API_KEY and NEXT_PUBLIC_FIREBASE_PROJECT_ID to connect your live Firebase project.'
-      );
+      setErrorMessage('Firebase credentials are not configured yet in .env.local.');
       return;
     }
 
@@ -100,15 +99,7 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
         setInfoMessage('Password reset email sent! Please check your inbox.');
       }
     } catch (err: any) {
-      let msg = err.message || 'Authentication error';
-      if (err.code === 'auth/invalid-credential' || err.code === 'auth/wrong-password') {
-        msg = 'Invalid email or password.';
-      } else if (err.code === 'auth/email-already-in-use') {
-        msg = 'This email is already registered. Please sign in instead.';
-      } else if (err.code === 'auth/weak-password') {
-        msg = 'Password should be at least 6 characters.';
-      }
-      setErrorMessage(msg);
+      setErrorMessage(formatAuthError(err));
     } finally {
       setIsLoading(false);
     }
@@ -129,14 +120,19 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
   return (
     <Modal isOpen={isOpen} onClose={handleClose} title={title} description={description} maxWidth="sm">
       <div className="space-y-4">
-        {/* Firebase setup notice if not configured */}
-        {!isFirebaseConfigured && (
+        {/* Firebase connection status */}
+        {isFirebaseConfigured ? (
+          <div className="p-2.5 bg-emerald-50/70 border border-emerald-200/80 rounded-xl flex items-center gap-2 text-xs text-emerald-800">
+            <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+            <span className="font-medium">Live Firebase Cloud Sync Enabled</span>
+          </div>
+        ) : (
           <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-start gap-2.5 text-xs text-slate-600">
             <Info className="w-4 h-4 text-indigo-600 shrink-0 mt-0.5" />
             <div>
               <p className="font-semibold text-slate-800">Firebase Not Configured</p>
               <p className="mt-0.5 text-slate-500">
-                You can use all generator and export features in Guest Mode. To enable cloud sync, supply your Firebase environment variables in <code className="text-indigo-600">.env.local</code>.
+                Supply your Firebase environment variables in <code className="text-indigo-600">.env.local</code>.
               </p>
             </div>
           </div>

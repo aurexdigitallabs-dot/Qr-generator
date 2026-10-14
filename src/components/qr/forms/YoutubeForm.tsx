@@ -20,7 +20,7 @@ export function YoutubeForm({ initialData, onChange }: YoutubeFormProps) {
     resolver: zodResolver(youtubeSchema),
     mode: 'onChange',
     defaultValues: {
-      url: initialData?.url || 'https://www.youtube.com/@veritasium',
+      url: initialData?.url ?? '',
     },
   });
 
