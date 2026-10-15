@@ -499,22 +499,7 @@ export default function HomePage() {
       console.log('[Download Pipeline] ✅ Complete! Download and collection recording finished.');
       console.groupEnd();
 
-      if (downloadResult?.isMobile) {
-        if (downloadResult.sharedViaWebShare) {
-          success('QR Code shared! Choose "Save Image" to save to your photos.');
-        } else {
-          setMobileModalData({
-            isOpen: true,
-            dataUrl: downloadResult.dataUrl,
-            format: downloadResult.format,
-            fileName: downloadResult.fileName,
-            blob: downloadResult.blob,
-          });
-          info('Tap & hold image to save to photos, or use the share sheet.');
-        }
-      } else {
-        success(`${format.toUpperCase()} downloaded to your device & saved to collection history!`);
-      }
+      success(`${format.toUpperCase()} downloaded to your device & saved to collection history!`);
     } catch (err: any) {
       console.error('[Download Pipeline] ❌ Download failed with error:', err);
       console.groupEnd();

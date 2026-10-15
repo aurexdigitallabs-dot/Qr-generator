@@ -293,92 +293,85 @@ export const QRPreview = forwardRef<QRPreviewRef, QRPreviewProps>(function QRPre
       });
       console.log('[QR Studio] 5b. Base64 Data URL ready, length:', dataUrl.length);
 
-      const mobile = isMobileDevice();
+      // ─── UNIVERSAL DEFAULT BROWSER DOWNLOAD ENGINE (Desktop & Mobile) ───
+      console.log('[QR Studio] 🚀 Initiating default browser download engine for:', fullFileName);
 
-      // ─── 1. MOBILE DEVICE WORKFLOW (iOS Safari / Android Chrome / WebViews) ───
-      if (mobile) {
-        console.log('[QR Studio] 📱 Mobile device detected. Initiating mobile save flow for:', fullFileName);
+      const mimeType = format === 'svg' ? 'image/svg+xml' : 'image/png';
+      const isIOS = typeof navigator !== 'undefined' && /iPhone|iPad|iPod/i.test(navigator.userAgent);
+      let downloadedViaAnchor = false;
 
-        // Attempt Web Share API with native File object
-        if (typeof navigator !== 'undefined' && typeof navigator.canShare === 'function') {
-          try {
-            const shareFile = new File([finalBlob], fullFileName, {
-              type: format === 'svg' ? 'image/svg+xml' : 'image/png',
-            });
-            if (navigator.canShare({ files: [shareFile] })) {
-              console.log('[QR Studio] 🚀 Calling navigator.share with file...');
-              await navigator.share({
-                files: [shareFile],
-                title: fullFileName,
-                text: 'Your custom QR Code',
-              });
-              console.log('[QR Studio] ✅ Successfully shared via native system share sheet!');
-              return {
-                success: true,
-                isMobile: true,
-                sharedViaWebShare: true,
-                dataUrl,
-                blob: finalBlob,
-                fileName: fullFileName,
-                format,
-              };
+      // ─── 1. Client-Side Anchor Download (Desktop Chrome/Edge/Firefox & Android Chrome) ───
+      // Triggers the browser's default download manager / download tray directly
+      if (!isIOS) {
+        try {
+          const downloadLink = document.createElement('a');
+          downloadLink.download = fullFileName;
+          downloadLink.href = dataUrl;
+          downloadLink.style.position = 'fixed';
+          downloadLink.style.left = '-9999px';
+          downloadLink.style.top = '-9999px';
+          downloadLink.style.opacity = '0';
+          document.body.appendChild(downloadLink);
+          downloadLink.click();
+          console.log('[QR Studio] ✅ Success via direct anchor download engine!');
+          downloadedViaAnchor = true;
+          setTimeout(() => {
+            if (downloadLink.parentNode) {
+              downloadLink.parentNode.removeChild(downloadLink);
             }
-          } catch (shareErr: any) {
-            if (shareErr.name === 'AbortError') {
-              console.log('[QR Studio] ℹ️ User cancelled the native share sheet.');
-              return {
-                success: true,
-                isMobile: true,
-                sharedViaWebShare: false,
-                dataUrl,
-                blob: finalBlob,
-                fileName: fullFileName,
-                format,
-              };
-            }
-            console.warn('[QR Studio] Web Share failed or rejected, falling back to mobile save modal:', shareErr);
-          }
+          }, 1500);
+        } catch (anchorErr) {
+          console.warn('[QR Studio] Direct anchor failed, falling back to HTTP stream:', anchorErr);
         }
-
-        // Return with isMobile: true so page can render MobileSaveModal bottom sheet
-        return {
-          success: true,
-          isMobile: true,
-          sharedViaWebShare: false,
-          dataUrl,
-          blob: finalBlob,
-          fileName: fullFileName,
-          format,
-        };
       }
 
-      // ─── 2. DESKTOP (PC) WORKFLOW: Direct 1-Click Browser Download (NO popup window) ───
-      console.log('[QR Studio] 💻 Desktop PC detected. Initiating direct file download for:', fullFileName);
-      try {
-        const downloadLink = document.createElement('a');
-        downloadLink.download = fullFileName;
-        downloadLink.href = dataUrl;
-        downloadLink.style.position = 'fixed';
-        downloadLink.style.left = '-9999px';
-        downloadLink.style.top = '-9999px';
-        downloadLink.style.opacity = '0';
-        document.body.appendChild(downloadLink);
-        downloadLink.click();
-        console.log('[QR Studio] ✅ Success via direct anchor download!');
-        setTimeout(() => {
-          if (downloadLink.parentNode) {
-            downloadLink.parentNode.removeChild(downloadLink);
-          }
-        }, 1500);
-      } catch (dataErr) {
-        console.warn('[QR Studio] Direct anchor failed, falling back to FileSaver:', dataErr);
-        const { saveAs } = await import('file-saver');
-        saveAs(finalBlob, fullFileName);
+      // ─── 2. HTTP Content-Disposition Stream (iOS Safari / Mobile Fallback) ───
+      // Triggers Safari's native download manager ("Do you want to download 'filename'?")
+      // and writes the file directly to the device's Downloads folder using the native browser engine.
+      if (!downloadedViaAnchor) {
+        try {
+          console.log('[QR Studio] 🌐 Triggering native browser download via Content-Disposition form...');
+          const form = document.createElement('form');
+          form.method = 'POST';
+          form.action = '/api/download';
+          form.style.display = 'none';
+
+          const fileInput = document.createElement('input');
+          fileInput.type = 'hidden';
+          fileInput.name = 'fileName';
+          fileInput.value = fullFileName;
+          form.appendChild(fileInput);
+
+          const mimeInput = document.createElement('input');
+          mimeInput.type = 'hidden';
+          mimeInput.name = 'mimeType';
+          mimeInput.value = mimeType;
+          form.appendChild(mimeInput);
+
+          const dataInput = document.createElement('input');
+          dataInput.type = 'hidden';
+          dataInput.name = 'data';
+          dataInput.value = dataUrl;
+          form.appendChild(dataInput);
+
+          document.body.appendChild(form);
+          form.submit();
+
+          setTimeout(() => {
+            if (form.parentNode) {
+              form.parentNode.removeChild(form);
+            }
+          }, 2000);
+        } catch (formErr) {
+          console.warn('[QR Studio] Form stream failed, falling back to FileSaver:', formErr);
+          const { saveAs } = await import('file-saver');
+          saveAs(finalBlob, fullFileName);
+        }
       }
 
       return {
         success: true,
-        isMobile: false,
+        isMobile: isMobileDevice(),
         sharedViaWebShare: false,
         dataUrl,
         blob: finalBlob,
