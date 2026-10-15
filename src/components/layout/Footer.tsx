@@ -13,13 +13,13 @@ export function Footer() {
           {/* Brand & Attribution Column (4 cols) */}
           <div className="md:col-span-4 space-y-4">
             <div className="flex items-center gap-3">
-              <div className="relative h-12 w-9 shrink-0">
+              <div className="relative h-10 w-10 shrink-0 rounded-xl overflow-hidden shadow-xs border border-[#E5E5E5] bg-[#0f172a]">
                 <Image
-                  src="/Aurex.png"
-                  alt="Aurex Digitals"
-                  width={36}
-                  height={48}
-                  className="h-full w-auto object-contain"
+                  src="/icon.svg"
+                  alt="BrandQR"
+                  width={40}
+                  height={40}
+                  className="h-full w-full object-contain"
                 />
               </div>
               <div>
@@ -36,12 +36,22 @@ export function Footer() {
               Create QR codes that carry your brand identity. Engineered for crisp print resolution, digital sharing, and maximum scan reliability.
             </p>
 
-            <div className="pt-2">
-              <span className="inline-flex items-center gap-2 px-2.5 py-1 rounded-lg text-xs font-semibold bg-[#FFF2EB] text-[#FF6B2C] border border-[#FFE6D9]">
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>Designed &amp; Developed by Aurex Digitals</span>
-              </span>
-              <p className="text-[11px] text-[#737373] font-medium tracking-wide mt-2">
+            <div className="pt-2 flex flex-col gap-2">
+              <div className="flex items-center gap-2.5">
+                <div className="relative h-7 w-5 shrink-0">
+                  <Image
+                    src="/Aurex.png"
+                    alt="Aurex Digitals"
+                    width={20}
+                    height={28}
+                    className="h-full w-auto object-contain"
+                  />
+                </div>
+                <span className="text-xs font-semibold text-[#171717]">
+                  Designed &amp; Developed by Aurex Digitals
+                </span>
+              </div>
+              <p className="text-[11px] text-[#737373] font-medium tracking-wide">
                 Master The Market.
               </p>
             </div>

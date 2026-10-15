@@ -122,16 +122,16 @@ export function AuthModal({ isOpen, onClose, onSuccess, reason }: AuthModalProps
   return (
     <Modal isOpen={isOpen} onClose={handleClose} title={title} description={description} maxWidth="sm">
       <div className="space-y-4">
-        {/* Subtle Aurex branding bar */}
+        {/* Brand identity bar */}
         <div className="flex items-center justify-between pb-3 border-b border-[#E5E5E5]">
           <div className="flex items-center gap-2">
-            <div className="relative h-5 w-5 shrink-0 flex items-center justify-center">
+            <div className="relative h-5 w-5 shrink-0 rounded-md overflow-hidden flex items-center justify-center bg-[#0f172a]">
               <Image
-                src="/Aurex%20icon%20only.png"
-                alt="Aurex Digitals"
+                src="/icon.svg"
+                alt="BrandQR"
                 width={20}
-                height={18}
-                className="h-full w-auto object-contain"
+                height={20}
+                className="h-full w-full object-contain"
               />
             </div>
             <span className="text-xs font-semibold text-[#171717]">

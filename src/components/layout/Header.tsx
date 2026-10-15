@@ -27,16 +27,16 @@ export function Header({
   return (
     <header className="sticky top-0 z-30 w-full bg-white/95 backdrop-blur-md border-b border-[#E5E5E5] transition-all">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3 sm:gap-4">
-        {/* Brand identity: Aurex Icon + Product Name */}
+        {/* Brand identity: BrandQR QR Icon + Product Name */}
         <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
-          <div className="relative flex items-center justify-center h-10 w-10 rounded-xl bg-[#FAFAFA] border border-[#E5E5E5] p-1.5 shadow-2xs shrink-0">
+          <div className="relative flex items-center justify-center h-10 w-10 rounded-xl overflow-hidden shadow-xs shrink-0 border border-[#E5E5E5] bg-[#0f172a]">
             <Image
-              src="/Aurex%20icon%20only.png"
-              alt="Aurex Digitals icon"
+              src="/icon.svg"
+              alt="BrandQR icon"
               width={40}
-              height={38}
+              height={40}
               priority
-              className="h-full w-auto object-contain"
+              className="h-full w-full object-contain"
             />
           </div>
           <div className="min-w-0">
