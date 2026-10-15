@@ -1,6 +1,6 @@
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import { getAuth, Auth, GoogleAuthProvider } from 'firebase/auth';
-import { getFirestore, Firestore } from 'firebase/firestore';
+import { initializeFirestore, getFirestore, Firestore } from 'firebase/firestore';
 import { getStorage, FirebaseStorage } from 'firebase/storage';
 
 const firebaseConfig = {
@@ -28,7 +28,16 @@ if (isFirebaseConfigured) {
   try {
     app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
     auth = getAuth(app);
-    db = getFirestore(app);
+    
+    // Enable force long polling to bypass net::ERR_QUIC_PROTOCOL_ERROR on networks with UDP drops
+    try {
+      db = initializeFirestore(app, {
+        experimentalForceLongPolling: true,
+      });
+    } catch {
+      db = getFirestore(app);
+    }
+
     storage = getStorage(app);
     googleProvider = new GoogleAuthProvider();
   } catch (error) {
