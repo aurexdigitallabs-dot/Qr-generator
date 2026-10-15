@@ -10,10 +10,12 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'BrandQR Studio — Professional Vector & Logo QR Code Generator',
+  title: 'BrandQR — Branded QR Code Generator by Aurex Digitals',
   description:
-    'Generate customized, high-resolution QR codes with brand logos, custom colors, dot patterns, error-correction safety, and export in PNG or SVG vector formats.',
+    'Create customized QR codes with your brand logo, colors, and downloadable formats using BrandQR by Aurex Digitals. Smart QR Codes. Your Brand.',
   keywords: [
+    'BrandQR',
+    'Aurex Digitals',
     'QR Code Generator',
     'Custom QR Code with Logo',
     'Vector QR Code SVG',
@@ -22,24 +24,27 @@ export const metadata: Metadata = {
     'vCard QR Code',
     'High Resolution QR',
   ],
-  authors: [{ name: 'BrandQR Studio' }],
+  authors: [{ name: 'Aurex Digitals', url: 'https://aurexdigitals.com' }],
+  creator: 'Aurex Digitals',
+  publisher: 'Aurex Digitals',
   icons: {
     icon: [
-      { url: '/icon.svg', type: 'image/svg+xml' },
+      { url: '/Aurex%20icon%20only.png', type: 'image/png' },
       { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
       { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
       { url: '/favicon.ico', sizes: 'any' },
     ],
-    shortcut: '/icon.svg',
+    shortcut: '/Aurex%20icon%20only.png',
     apple: [
-      { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+      { url: '/Aurex%20icon%20only.png', sizes: '180x180', type: 'image/png' },
     ],
   },
   openGraph: {
-    title: 'BrandQR Studio — Professional Vector & Logo QR Code Generator',
+    title: 'BrandQR — Branded QR Code Generator by Aurex Digitals',
     description:
-      'Generate customized, high-resolution QR codes with brand logos, custom colors, dot patterns, and SVG export.',
+      'Create customized QR codes with your brand logo, colors, and downloadable formats using BrandQR by Aurex Digitals.',
     type: 'website',
+    siteName: 'BrandQR by Aurex Digitals',
   },
 };
 
@@ -47,6 +52,7 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   maximumScale: 5,
+  themeColor: '#FF6B2C',
 };
 
 export default function RootLayout({
@@ -56,7 +62,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${inter.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col font-sans bg-slate-50 text-slate-900">
+      <body className="min-h-full flex flex-col font-sans bg-[#FAFAFA] text-[#171717]">
         <ToastProvider>{children}</ToastProvider>
       </body>
     </html>

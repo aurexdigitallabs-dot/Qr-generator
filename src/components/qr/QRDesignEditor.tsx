@@ -3,8 +3,8 @@
 import React, { useState } from 'react';
 import { QRDesignSettings, DotType, CornerSquareType, CornerDotType, ErrorCorrectionLevel } from '@/types/qr';
 import { LogoUploader } from './LogoUploader';
-import { DESIGN_PRESETS, DEFAULT_DESIGN } from '@/lib/qr/presets';
-import { Palette, Sparkles, Shapes, SlidersHorizontal, RotateCcw, Image as ImageIcon } from 'lucide-react';
+import { DESIGN_PRESETS } from '@/lib/qr/presets';
+import { Palette, Sparkles, Shapes, RotateCcw, Image as ImageIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface QRDesignEditorProps {
@@ -54,9 +54,9 @@ export function QRDesignEditor({ design, onChange, onReset, onError }: QRDesignE
   ];
 
   return (
-    <div className="w-full bg-white rounded-2xl border border-slate-200 p-4 sm:p-5 shadow-2xs space-y-4">
+    <div className="w-full bg-white rounded-2xl border border-[#E5E5E5] p-4 sm:p-5 shadow-2xs space-y-4">
       {/* Tab Navigation */}
-      <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+      <div className="flex items-center justify-between border-b border-[#E5E5E5] pb-3">
         <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
           {tabs.map((tab) => {
             const Icon = tab.icon;
@@ -69,11 +69,11 @@ export function QRDesignEditor({ design, onChange, onReset, onError }: QRDesignE
                 className={cn(
                   'flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer select-none',
                   isActive
-                    ? 'bg-indigo-50 text-indigo-700 border border-indigo-200 shadow-2xs'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50 border border-transparent'
+                    ? 'bg-[#FFF2EB] text-[#FF6B2C] border border-[#FFE6D9] shadow-2xs'
+                    : 'text-[#737373] hover:text-[#171717] hover:bg-[#FAFAFA] border border-transparent'
                 )}
               >
-                <Icon className={cn('w-3.5 h-3.5', isActive ? 'text-indigo-600' : 'text-slate-400')} />
+                <Icon className={cn('w-3.5 h-3.5', isActive ? 'text-[#FF6B2C]' : 'text-[#737373]')} />
                 <span>{tab.label}</span>
               </button>
             );
@@ -83,7 +83,7 @@ export function QRDesignEditor({ design, onChange, onReset, onError }: QRDesignE
         <button
           type="button"
           onClick={onReset}
-          className="flex items-center gap-1 text-[11px] font-medium text-slate-500 hover:text-rose-600 px-2 py-1 rounded-lg hover:bg-rose-50 transition"
+          className="flex items-center gap-1 text-[11px] font-medium text-[#737373] hover:text-rose-600 px-2 py-1 rounded-lg hover:bg-rose-50 transition"
           title="Reset to safe default design"
         >
           <RotateCcw className="w-3 h-3" />
@@ -95,10 +95,10 @@ export function QRDesignEditor({ design, onChange, onReset, onError }: QRDesignE
       {activeTab === 'presets' && (
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-700 uppercase tracking-wider">
+            <span className="text-xs font-semibold text-[#171717] uppercase tracking-wider">
               Curated Style Presets
             </span>
-            <span className="text-xs text-slate-400">1-click styling</span>
+            <span className="text-xs text-[#737373]">1-click styling</span>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
@@ -112,11 +112,11 @@ export function QRDesignEditor({ design, onChange, onReset, onError }: QRDesignE
                     ...preset.settings,
                   });
                 }}
-                className="flex items-center gap-3 p-3 text-left rounded-xl border border-slate-200 hover:border-indigo-400 hover:bg-indigo-50/20 transition cursor-pointer group bg-white shadow-2xs"
+                className="flex items-center gap-3 p-3 text-left rounded-xl border border-[#E5E5E5] hover:border-[#FF6B2C] hover:bg-[#FFF2EB]/20 transition cursor-pointer group bg-white shadow-2xs"
               >
                 {/* Visual Swatch */}
                 <div
-                  className="w-10 h-10 rounded-lg border border-slate-200 shrink-0 flex items-center justify-center p-1 relative shadow-2xs"
+                  className="w-10 h-10 rounded-lg border border-[#E5E5E5] shrink-0 flex items-center justify-center p-1 relative shadow-2xs"
                   style={{ backgroundColor: preset.previewBgColor }}
                 >
                   <div
@@ -125,10 +125,10 @@ export function QRDesignEditor({ design, onChange, onReset, onError }: QRDesignE
                   />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-xs font-semibold text-slate-900 group-hover:text-indigo-600 transition">
+                  <p className="text-xs font-semibold text-[#171717] group-hover:text-[#FF6B2C] transition">
                     {preset.name}
                   </p>
-                  <p className="text-[11px] text-slate-500 truncate mt-0.5">
+                  <p className="text-[11px] text-[#737373] truncate mt-0.5">
                     {preset.description}
                   </p>
                 </div>
@@ -162,29 +162,29 @@ export function QRDesignEditor({ design, onChange, onReset, onError }: QRDesignE
         <div className="space-y-4">
           {/* Foreground Dots Color */}
           <div className="space-y-2">
-            <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider">
+            <label className="block text-xs font-semibold text-[#171717] uppercase tracking-wider">
               QR Code Foreground Color
             </label>
-            <div className="flex items-center gap-3 p-2.5 bg-slate-50 border border-slate-200 rounded-xl">
+            <div className="flex items-center gap-3 p-2.5 bg-[#FAFAFA] border border-[#E5E5E5] rounded-xl">
               <input
                 type="color"
                 value={design.dotsColor}
                 onChange={(e) => onChange({ ...design, dotsColor: e.target.value })}
-                className="w-8 h-8 rounded-lg border border-slate-300 cursor-pointer p-0.5 bg-white"
+                className="w-8 h-8 rounded-lg border border-[#E5E5E5] cursor-pointer p-0.5 bg-white"
               />
               <div className="flex-1">
-                <span className="text-xs font-medium text-slate-800 block">Primary Color</span>
-                <span className="text-xs font-mono uppercase text-slate-500">{design.dotsColor}</span>
+                <span className="text-xs font-medium text-[#171717] block">Primary Color</span>
+                <span className="text-xs font-mono uppercase text-[#737373]">{design.dotsColor}</span>
               </div>
             </div>
           </div>
 
           {/* Gradient Controls */}
-          <div className="space-y-2.5 p-3 bg-slate-50 border border-slate-200 rounded-xl">
+          <div className="space-y-2.5 p-3 bg-[#FAFAFA] border border-[#E5E5E5] rounded-xl">
             <div className="flex items-center justify-between">
               <div>
-                <span className="text-xs font-semibold text-slate-800 block">Enable Color Gradient</span>
-                <span className="text-[11px] text-slate-500">Smooth color transition across pattern</span>
+                <span className="text-xs font-semibold text-[#171717] block">Enable Color Gradient</span>
+                <span className="text-[11px] text-[#737373]">Smooth color transition across pattern</span>
               </div>
               <label className="relative inline-flex items-center cursor-pointer">
                 <input
@@ -198,12 +198,12 @@ export function QRDesignEditor({ design, onChange, onReset, onError }: QRDesignE
                   }
                   className="sr-only peer"
                 />
-                <div className="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
+                <div className="w-9 h-5 bg-[#E5E5E5] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-[#E5E5E5] after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#FF6B2C]"></div>
               </label>
             </div>
 
             {design.dotsGradientEnabled && (
-              <div className="pt-2 border-t border-slate-200/80 space-y-3">
+              <div className="pt-2 border-t border-[#E5E5E5] space-y-3">
                 <div className="flex items-center gap-3">
                   <input
                     type="color"
@@ -214,11 +214,11 @@ export function QRDesignEditor({ design, onChange, onReset, onError }: QRDesignE
                         dotsGradientColor: e.target.value,
                       })
                     }
-                    className="w-8 h-8 rounded-lg border border-slate-300 cursor-pointer p-0.5 bg-white"
+                    className="w-8 h-8 rounded-lg border border-[#E5E5E5] cursor-pointer p-0.5 bg-white"
                   />
                   <div>
-                    <span className="text-xs font-medium text-slate-800 block">Secondary Accent Color</span>
-                    <span className="text-xs font-mono uppercase text-slate-500">{design.dotsGradientColor}</span>
+                    <span className="text-xs font-medium text-[#171717] block">Secondary Accent Color</span>
+                    <span className="text-xs font-mono uppercase text-[#737373]">{design.dotsGradientColor}</span>
                   </div>
                 </div>
 
@@ -227,10 +227,10 @@ export function QRDesignEditor({ design, onChange, onReset, onError }: QRDesignE
                     type="button"
                     onClick={() => onChange({ ...design, dotsGradientType: 'linear' })}
                     className={cn(
-                      'py-1.5 px-3 rounded-lg text-xs font-medium border text-center transition',
+                      'py-1.5 px-3 rounded-lg text-xs font-medium border text-center transition cursor-pointer',
                       design.dotsGradientType === 'linear'
-                        ? 'bg-indigo-50 border-indigo-500 text-indigo-700 font-semibold'
-                        : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                        ? 'bg-[#FFF2EB] border-[#FF6B2C] text-[#FF6B2C] font-semibold'
+                        : 'bg-white border-[#E5E5E5] text-[#737373] hover:bg-[#FAFAFA]'
                     )}
                   >
                     Linear Gradient
@@ -239,10 +239,10 @@ export function QRDesignEditor({ design, onChange, onReset, onError }: QRDesignE
                     type="button"
                     onClick={() => onChange({ ...design, dotsGradientType: 'radial' })}
                     className={cn(
-                      'py-1.5 px-3 rounded-lg text-xs font-medium border text-center transition',
+                      'py-1.5 px-3 rounded-lg text-xs font-medium border text-center transition cursor-pointer',
                       design.dotsGradientType === 'radial'
-                        ? 'bg-indigo-50 border-indigo-500 text-indigo-700 font-semibold'
-                        : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                        ? 'bg-[#FFF2EB] border-[#FF6B2C] text-[#FF6B2C] font-semibold'
+                        : 'bg-white border-[#E5E5E5] text-[#737373] hover:bg-[#FAFAFA]'
                     )}
                   >
                     Radial Gradient
@@ -254,10 +254,10 @@ export function QRDesignEditor({ design, onChange, onReset, onError }: QRDesignE
 
           {/* Background Color & Transparency */}
           <div className="space-y-2">
-            <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider">
+            <label className="block text-xs font-semibold text-[#171717] uppercase tracking-wider">
               Background Canvas
             </label>
-            <div className="flex items-center justify-between gap-3 p-2.5 bg-slate-50 border border-slate-200 rounded-xl">
+            <div className="flex items-center justify-between gap-3 p-2.5 bg-[#FAFAFA] border border-[#E5E5E5] rounded-xl">
               <div className="flex items-center gap-3">
                 <input
                   type="color"
@@ -265,21 +265,21 @@ export function QRDesignEditor({ design, onChange, onReset, onError }: QRDesignE
                   value={design.backgroundColor}
                   onChange={(e) => onChange({ ...design, backgroundColor: e.target.value })}
                   className={cn(
-                    'w-8 h-8 rounded-lg border border-slate-300 cursor-pointer p-0.5 bg-white',
+                    'w-8 h-8 rounded-lg border border-[#E5E5E5] cursor-pointer p-0.5 bg-white',
                     design.backgroundTransparent && 'opacity-30 cursor-not-allowed'
                   )}
                 />
                 <div>
-                  <span className="text-xs font-medium text-slate-800 block">
+                  <span className="text-xs font-medium text-[#171717] block">
                     {design.backgroundTransparent ? 'Transparent Canvas' : 'Canvas Fill'}
                   </span>
-                  <span className="text-xs font-mono uppercase text-slate-500">
+                  <span className="text-xs font-mono uppercase text-[#737373]">
                     {design.backgroundTransparent ? 'No background' : design.backgroundColor}
                   </span>
                 </div>
               </div>
 
-              <label className="flex items-center gap-2 cursor-pointer text-xs font-medium text-slate-700">
+              <label className="flex items-center gap-2 cursor-pointer text-xs font-medium text-[#171717]">
                 <input
                   type="checkbox"
                   checked={design.backgroundTransparent}
@@ -289,7 +289,7 @@ export function QRDesignEditor({ design, onChange, onReset, onError }: QRDesignE
                       backgroundTransparent: e.target.checked,
                     })
                   }
-                  className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 border-slate-300"
+                  className="w-4 h-4 rounded text-[#FF6B2C] focus:ring-[#FF6B2C] border-[#E5E5E5]"
                 />
                 <span>Transparent</span>
               </label>
@@ -303,7 +303,7 @@ export function QRDesignEditor({ design, onChange, onReset, onError }: QRDesignE
         <div className="space-y-4">
           {/* Dot Style */}
           <div>
-            <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">
+            <label className="block text-xs font-semibold text-[#171717] uppercase tracking-wider mb-2">
               Body Pattern Style
             </label>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -313,10 +313,10 @@ export function QRDesignEditor({ design, onChange, onReset, onError }: QRDesignE
                   type="button"
                   onClick={() => onChange({ ...design, dotsType: dot.type })}
                   className={cn(
-                    'py-2 px-2.5 text-xs font-medium rounded-xl border text-center transition',
+                    'py-2 px-2.5 text-xs font-medium rounded-xl border text-center transition cursor-pointer',
                     design.dotsType === dot.type
-                      ? 'bg-indigo-50 border-indigo-600 text-indigo-700 font-semibold shadow-2xs'
-                      : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+                      ? 'bg-[#FFF2EB] border-[#FF6B2C] text-[#FF6B2C] font-semibold shadow-2xs'
+                      : 'bg-white border-[#E5E5E5] text-[#737373] hover:bg-[#FAFAFA] hover:text-[#171717]'
                   )}
                 >
                   {dot.label}
@@ -327,7 +327,7 @@ export function QRDesignEditor({ design, onChange, onReset, onError }: QRDesignE
 
           {/* Corner Square Style */}
           <div>
-            <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">
+            <label className="block text-xs font-semibold text-[#171717] uppercase tracking-wider mb-2">
               Corner Frame (Eye Box)
             </label>
             <div className="grid grid-cols-3 gap-2">
@@ -337,10 +337,10 @@ export function QRDesignEditor({ design, onChange, onReset, onError }: QRDesignE
                   type="button"
                   onClick={() => onChange({ ...design, cornersSquareType: cs.type })}
                   className={cn(
-                    'py-2 px-2 text-xs font-medium rounded-xl border text-center transition',
+                    'py-2 px-2 text-xs font-medium rounded-xl border text-center transition cursor-pointer',
                     design.cornersSquareType === cs.type
-                      ? 'bg-indigo-50 border-indigo-600 text-indigo-700 font-semibold shadow-2xs'
-                      : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+                      ? 'bg-[#FFF2EB] border-[#FF6B2C] text-[#FF6B2C] font-semibold shadow-2xs'
+                      : 'bg-white border-[#E5E5E5] text-[#737373] hover:bg-[#FAFAFA] hover:text-[#171717]'
                   )}
                 >
                   {cs.label}
@@ -351,7 +351,7 @@ export function QRDesignEditor({ design, onChange, onReset, onError }: QRDesignE
 
           {/* Corner Dot Style */}
           <div>
-            <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">
+            <label className="block text-xs font-semibold text-[#171717] uppercase tracking-wider mb-2">
               Corner Eye Center
             </label>
             <div className="grid grid-cols-2 gap-2">
@@ -361,10 +361,10 @@ export function QRDesignEditor({ design, onChange, onReset, onError }: QRDesignE
                   type="button"
                   onClick={() => onChange({ ...design, cornersDotType: cd.type })}
                   className={cn(
-                    'py-2 px-2 text-xs font-medium rounded-xl border text-center transition',
+                    'py-2 px-2 text-xs font-medium rounded-xl border text-center transition cursor-pointer',
                     design.cornersDotType === cd.type
-                      ? 'bg-indigo-50 border-indigo-600 text-indigo-700 font-semibold shadow-2xs'
-                      : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+                      ? 'bg-[#FFF2EB] border-[#FF6B2C] text-[#FF6B2C] font-semibold shadow-2xs'
+                      : 'bg-white border-[#E5E5E5] text-[#737373] hover:bg-[#FAFAFA] hover:text-[#171717]'
                   )}
                 >
                   {cd.label}
@@ -376,10 +376,10 @@ export function QRDesignEditor({ design, onChange, onReset, onError }: QRDesignE
           {/* Quiet Zone Margin Slider */}
           <div>
             <div className="flex items-center justify-between mb-1.5">
-              <label htmlFor="qr-margin-range" className="text-xs font-semibold text-slate-700 uppercase tracking-wider">
+              <label htmlFor="qr-margin-range" className="text-xs font-semibold text-[#171717] uppercase tracking-wider">
                 Quiet Zone Margin
               </label>
-              <span className="text-xs font-mono text-slate-600">{design.margin}px</span>
+              <span className="text-xs font-mono text-[#737373]">{design.margin}px</span>
             </div>
             <input
               id="qr-margin-range"
@@ -389,18 +389,18 @@ export function QRDesignEditor({ design, onChange, onReset, onError }: QRDesignE
               step="2"
               value={design.margin}
               onChange={(e) => onChange({ ...design, margin: parseInt(e.target.value, 10) })}
-              className="w-full accent-indigo-600 h-1.5 bg-slate-200 rounded-lg cursor-pointer"
+              className="w-full accent-[#FF6B2C] h-1.5 bg-[#E5E5E5] rounded-lg cursor-pointer"
             />
-            <div className="flex justify-between text-[10px] text-slate-400 mt-1">
+            <div className="flex justify-between text-[10px] text-[#737373] mt-1">
               <span>0px (Tight)</span>
-              <span className="text-indigo-600 font-medium">12px (Recommended)</span>
+              <span className="text-[#FF6B2C] font-medium">12px (Recommended)</span>
               <span>24px (Spacious)</span>
             </div>
           </div>
 
           {/* Error Correction Level */}
           <div>
-            <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+            <label className="block text-xs font-semibold text-[#171717] uppercase tracking-wider mb-1.5">
               Error Correction Level
             </label>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -410,14 +410,14 @@ export function QRDesignEditor({ design, onChange, onReset, onError }: QRDesignE
                   type="button"
                   onClick={() => onChange({ ...design, errorCorrectionLevel: ec.level })}
                   className={cn(
-                    'p-2 rounded-xl border text-center transition',
+                    'p-2 rounded-xl border text-center transition cursor-pointer',
                     design.errorCorrectionLevel === ec.level
-                      ? 'bg-indigo-50 border-indigo-600 text-indigo-700 font-semibold shadow-2xs'
-                      : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+                      ? 'bg-[#FFF2EB] border-[#FF6B2C] text-[#FF6B2C] font-semibold shadow-2xs'
+                      : 'bg-white border-[#E5E5E5] text-[#737373] hover:bg-[#FAFAFA] hover:text-[#171717]'
                   )}
                 >
                   <span className="block text-xs font-bold">{ec.label}</span>
-                  <span className="block text-[10px] text-slate-500 mt-0.5">{ec.desc}</span>
+                  <span className="block text-[10px] text-[#737373] mt-0.5">{ec.desc}</span>
                 </button>
               ))}
             </div>

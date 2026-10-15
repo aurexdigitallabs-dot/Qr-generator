@@ -41,13 +41,13 @@ export function TextForm({ initialData, onChange }: TextFormProps) {
     <div className="space-y-4">
       <div>
         <div className="flex items-center justify-between mb-1.5">
-          <label htmlFor="text-input" className="block text-xs font-semibold text-slate-700 uppercase tracking-wider">
+          <label htmlFor="text-input" className="block text-xs font-semibold text-[#171717] uppercase tracking-wider">
             Plain Text Message <span className="text-rose-500">*</span>
           </label>
-          <span className="text-xs text-slate-400 font-mono">{charCount} / 2000</span>
+          <span className="text-xs text-[#737373] font-mono">{charCount} / 2000</span>
         </div>
-        <div className="relative rounded-xl shadow-xs">
-          <div className="absolute top-3 left-3.5 pointer-events-none text-slate-400">
+        <div className="relative rounded-xl shadow-2xs">
+          <div className="absolute top-3 left-3.5 pointer-events-none text-[#737373]">
             <AlignLeft className="w-4 h-4" />
           </div>
           <textarea
@@ -55,13 +55,13 @@ export function TextForm({ initialData, onChange }: TextFormProps) {
             rows={4}
             {...register('text')}
             placeholder="Type any message, notes, coupon code, or serial number..."
-            className="block w-full pl-10 pr-4 py-2.5 text-sm bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition"
+            className="block w-full pl-10 pr-4 py-2.5 text-sm bg-white border border-[#E5E5E5] rounded-xl text-[#171717] placeholder:text-[#737373] focus:outline-none focus:ring-2 focus:ring-[#FF6B2C] focus:border-[#FF6B2C] transition"
           />
         </div>
         {errors.text && (
           <p className="mt-1.5 text-xs text-rose-600 font-medium">{errors.text.message}</p>
         )}
-        <p className="mt-1 text-xs text-slate-500">
+        <p className="mt-1 text-xs text-[#737373]">
           Any text displayed directly on the scanner screen without opening an internet browser.
         </p>
       </div>

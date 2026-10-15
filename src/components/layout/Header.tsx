@@ -2,9 +2,7 @@
 
 import React from 'react';
 import { AppUser } from '@/types/auth';
-import { QrCode, FolderOpen, LogIn, LogOut, Sparkles, User as UserIcon } from 'lucide-react';
-import { isFirebaseConfigured } from '@/lib/firebase/client';
-import { cn } from '@/lib/utils';
+import { FolderOpen, LogIn, LogOut } from 'lucide-react';
 import Image from 'next/image';
 
 interface HeaderProps {
@@ -27,40 +25,47 @@ export function Header({
   const totalCount = savedCount + historyCount;
 
   return (
-    <header className="sticky top-0 z-30 w-full bg-white/90 backdrop-blur-md border-b border-slate-200/80 transition-all">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
-        {/* Brand identity */}
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-slate-900 text-white flex items-center justify-center shadow-xs">
-            <QrCode className="w-5 h-5 text-indigo-400" />
+    <header className="sticky top-0 z-30 w-full bg-white/95 backdrop-blur-md border-b border-[#E5E5E5] transition-all">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3 sm:gap-4">
+        {/* Brand identity: Aurex Icon + Product Name */}
+        <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+          <div className="relative flex items-center justify-center h-10 w-10 rounded-xl bg-[#FAFAFA] border border-[#E5E5E5] p-1.5 shadow-2xs shrink-0">
+            <Image
+              src="/Aurex%20icon%20only.png"
+              alt="Aurex Digitals icon"
+              width={40}
+              height={38}
+              priority
+              className="h-full w-auto object-contain"
+            />
           </div>
-          <div>
+          <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <h1 className="text-base font-bold text-slate-900 tracking-tight leading-none">
-                BrandQR Studio
-              </h1>
-              <span className="hidden sm:inline-flex px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">
-                PRO
+              <span className="text-base sm:text-lg font-bold text-[#171717] tracking-tight leading-none">
+                BrandQR
+              </span>
+              <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-[#FFF2EB] text-[#FF6B2C] border border-[#FFE6D9] shrink-0">
+                By Aurex Digitals
               </span>
             </div>
-            <p className="hidden sm:block text-[11px] text-slate-500 font-medium">
-              High-Fidelity Branded QR Code Engine
+            <p className="hidden sm:block text-[11px] text-[#737373] font-medium mt-0.5 truncate">
+              Smart QR Codes. Your Brand.
             </p>
           </div>
         </div>
 
         {/* Right side navigation & user actions */}
-        <div className="flex items-center gap-2 sm:gap-3">
-          {/* Saved & History button with counter badge */}
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          {/* Library button with counter badge */}
           <button
             type="button"
             onClick={onOpenSaved}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-700 bg-slate-50 hover:bg-slate-100 border border-slate-200 transition select-none cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-[#171717] bg-[#FAFAFA] hover:bg-[#F0F0F0] border border-[#E5E5E5] transition select-none cursor-pointer active:scale-[0.99]"
           >
-            <FolderOpen className="w-4 h-4 text-slate-500" />
-            <span>Library</span>
+            <FolderOpen className="w-4 h-4 text-[#737373]" />
+            <span className="hidden xs:inline">Library</span>
             {totalCount > 0 && (
-              <span className="w-4 h-4 rounded-full bg-indigo-600 text-white text-[10px] flex items-center justify-center font-bold">
+              <span className="min-w-[18px] h-4 px-1 rounded-full bg-[#FF6B2C] text-white text-[10px] flex items-center justify-center font-bold">
                 {totalCount}
               </span>
             )}
@@ -68,8 +73,8 @@ export function Header({
 
           {/* User Profile / Auth Button */}
           {user ? (
-            <div className="flex items-center gap-2">
-              <div className="flex items-center gap-2 px-2.5 py-1 bg-slate-50 border border-slate-200 rounded-xl">
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <div className="flex items-center gap-2 px-2.5 py-1 bg-[#FAFAFA] border border-[#E5E5E5] rounded-xl">
                 {user.photoURL ? (
                   <Image
                     src={user.photoURL}
@@ -80,11 +85,11 @@ export function Header({
                     className="w-5 h-5 rounded-full object-cover"
                   />
                 ) : (
-                  <div className="w-5 h-5 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-[10px] font-bold">
+                  <div className="w-5 h-5 rounded-full bg-[#FFF2EB] text-[#FF6B2C] flex items-center justify-center text-[10px] font-bold">
                     {user.email ? user.email[0].toUpperCase() : 'U'}
                   </div>
                 )}
-                <span className="text-xs font-medium text-slate-800 max-w-[100px] sm:max-w-[140px] truncate">
+                <span className="text-xs font-medium text-[#171717] max-w-[80px] sm:max-w-[130px] truncate">
                   {user.displayName || user.email?.split('@')[0]}
                 </span>
               </div>
@@ -94,7 +99,7 @@ export function Header({
                 onClick={onSignOut}
                 aria-label="Sign out"
                 title="Sign out"
-                className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition"
+                className="p-1.5 text-[#737373] hover:text-[#171717] hover:bg-[#F0F0F0] rounded-lg transition"
               >
                 <LogOut className="w-4 h-4" />
               </button>
@@ -103,9 +108,9 @@ export function Header({
             <button
               type="button"
               onClick={onOpenAuth}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 transition shadow-2xs select-none cursor-pointer"
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold text-white bg-[#111111] hover:bg-[#1C1C1C] border border-[#111111] transition shadow-2xs select-none cursor-pointer active:scale-[0.99]"
             >
-              <LogIn className="w-3.5 h-3.5" />
+              <LogIn className="w-3.5 h-3.5 text-[#FF6B2C]" />
               <span>Sign In</span>
             </button>
           )}

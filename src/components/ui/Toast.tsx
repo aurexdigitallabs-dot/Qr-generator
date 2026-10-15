@@ -62,23 +62,23 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
             key={t.id}
             className={cn(
               'pointer-events-auto flex items-start gap-3 p-3.5 rounded-xl shadow-lg border text-sm font-medium transition-all transform animate-in fade-in slide-in-from-bottom-2 duration-200',
-              t.type === 'success' && 'bg-slate-900 text-white border-slate-800',
+              t.type === 'success' && 'bg-[#111111] text-white border-[#1C1C1C]',
               t.type === 'error' && 'bg-rose-950 text-rose-100 border-rose-800',
               t.type === 'warning' && 'bg-amber-950 text-amber-100 border-amber-800',
-              t.type === 'info' && 'bg-slate-900 text-slate-100 border-slate-700'
+              t.type === 'info' && 'bg-[#111111] text-[#FAFAFA] border-[#1C1C1C]'
             )}
           >
             <div className="shrink-0 mt-0.5">
               {t.type === 'success' && <CheckCircle2 className="w-4 h-4 text-emerald-400" />}
               {t.type === 'error' && <AlertCircle className="w-4 h-4 text-rose-400" />}
               {t.type === 'warning' && <AlertTriangle className="w-4 h-4 text-amber-400" />}
-              {t.type === 'info' && <Info className="w-4 h-4 text-indigo-400" />}
+              {t.type === 'info' && <Info className="w-4 h-4 text-[#FF6B2C]" />}
             </div>
             <div className="flex-1 leading-snug break-words">{t.message}</div>
             <button
               type="button"
               onClick={() => removeToast(t.id)}
-              className="shrink-0 p-1 rounded-md text-slate-400 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-400"
+              className="shrink-0 p-1 rounded-md text-[#737373] hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-[#FF6B2C]"
               aria-label="Close notification"
             >
               <X className="w-3.5 h-3.5" />

@@ -131,10 +131,10 @@ export function QRTypeSelector({ selectedType, onSelect }: QRTypeSelectorProps) 
   return (
     <div className="w-full">
       <div className="flex items-center justify-between mb-2">
-        <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+        <span className="text-xs font-semibold text-[#737373] uppercase tracking-wider">
           Select QR Content Type
         </span>
-        <span className="text-xs text-slate-400 font-mono">11 standard formats</span>
+        <span className="text-xs text-[#737373] font-mono">11 standard formats</span>
       </div>
 
       {/* Horizontally scrollable on mobile, compact multi-row flex on desktop */}
@@ -156,14 +156,14 @@ export function QRTypeSelector({ selectedType, onSelect }: QRTypeSelectorProps) 
               className={cn(
                 'flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-medium shrink-0 transition-all cursor-pointer border select-none',
                 isSelected
-                  ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
-                  : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900'
+                  ? 'bg-[#111111] text-white border-[#111111] shadow-2xs'
+                  : 'bg-white text-[#737373] border-[#E5E5E5] hover:border-[#171717] hover:bg-[#FAFAFA] hover:text-[#171717]'
               )}
             >
               <Icon
                 className={cn(
                   'w-3.5 h-3.5',
-                  isSelected ? 'text-indigo-400' : 'text-slate-500'
+                  isSelected ? 'text-[#FF6B2C]' : 'text-[#737373]'
                 )}
               />
               <span>{item.label}</span>

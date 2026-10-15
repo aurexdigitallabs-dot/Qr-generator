@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState, useImperativeHandle, forwardRef } f
 import { QRDesignSettings, ExportFormat, ExportResolution, ReliabilityReport } from '@/types/qr';
 import { evaluateScanReliability } from '@/lib/qr/reliability';
 import { ScanReliabilityMeter } from './ScanReliabilityMeter';
-import { Smartphone, Monitor, AlertCircle, Sparkles, QrCode } from 'lucide-react';
+import { Smartphone, Monitor } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export interface QRDownloadResult {
@@ -36,6 +36,27 @@ interface QRPreviewProps {
   hasValidPayload: boolean;
   design: QRDesignSettings;
   typeName: string;
+}
+
+/**
+ * Continuous logo scaling extension:
+ * Directly sizes and centers the SVG <image> element so that the logo scales smoothly
+ * and continuously with the slider at any resolution, without discrete step clamping.
+ */
+function applyLogoScaling(svg: SVGElement, options: any, scaleRatio: number) {
+  if (!svg || !options || !svg.querySelector) return;
+  const imageEl = svg.querySelector('image');
+  if (!imageEl) return;
+
+  const qrDim = options.width || 300;
+  const targetDim = Math.round(qrDim * scaleRatio);
+  const targetX = Math.round((qrDim - targetDim) / 2);
+  const targetY = Math.round((qrDim - targetDim) / 2);
+
+  imageEl.setAttribute('x', String(targetX));
+  imageEl.setAttribute('y', String(targetY));
+  imageEl.setAttribute('width', `${targetDim}px`);
+  imageEl.setAttribute('height', `${targetDim}px`);
 }
 
 export const QRPreview = forwardRef<QRPreviewRef, QRPreviewProps>(function QRPreview(
@@ -75,9 +96,13 @@ export const QRPreview = forwardRef<QRPreviewRef, QRPreviewProps>(function QRPre
       color: design.backgroundTransparent ? 'transparent' : design.backgroundColor,
     };
 
+    // Calculate mappedImageSize to clear the right number of dots in qr-code-styling's grid
+    const targetScale = design.logo.sizeRatio || 0.25;
+    const mappedImageSize = Math.min(1.0, Math.pow(targetScale * 1.08, 2) / 0.3);
+
     const imageOptions: any = {
       hideBackgroundDots: true,
-      imageSize: design.logo.sizeRatio || 0.25,
+      imageSize: mappedImageSize,
       margin: design.logo.margin || 4,
       crossOrigin: 'anonymous',
     };
@@ -119,14 +144,30 @@ export const QRPreview = forwardRef<QRPreviewRef, QRPreviewProps>(function QRPre
 
         if (!isMounted) return;
 
+        const logoScale = design.logo.sizeRatio || 0.25;
+        const hasLogo = Boolean(design.logo.dataUrl);
+
         // Render Canvas view
         if (canvasContainerRef.current) {
           const canvasOptions = buildQROptions(300);
           if (!canvasQRRef.current || !canvasContainerRef.current.children.length) {
             canvasContainerRef.current.innerHTML = '';
             canvasQRRef.current = new QRCodeStyling(canvasOptions);
+            if (hasLogo) {
+              (canvasQRRef.current as any)._extension = (svg: SVGElement, opts: any) => {
+                applyLogoScaling(svg, opts, logoScale);
+              };
+              canvasQRRef.current.update(canvasOptions);
+            }
             canvasQRRef.current.append(canvasContainerRef.current);
           } else {
+            if (hasLogo) {
+              (canvasQRRef.current as any)._extension = (svg: SVGElement, opts: any) => {
+                applyLogoScaling(svg, opts, logoScale);
+              };
+            } else {
+              (canvasQRRef.current as any)._extension = undefined;
+            }
             canvasQRRef.current.update(canvasOptions);
           }
         }
@@ -137,8 +178,21 @@ export const QRPreview = forwardRef<QRPreviewRef, QRPreviewProps>(function QRPre
           if (!phoneQRRef.current || !phoneContainerRef.current.children.length) {
             phoneContainerRef.current.innerHTML = '';
             phoneQRRef.current = new QRCodeStyling(phoneOptions);
+            if (hasLogo) {
+              (phoneQRRef.current as any)._extension = (svg: SVGElement, opts: any) => {
+                applyLogoScaling(svg, opts, logoScale);
+              };
+              phoneQRRef.current.update(phoneOptions);
+            }
             phoneQRRef.current.append(phoneContainerRef.current);
           } else {
+            if (hasLogo) {
+              (phoneQRRef.current as any)._extension = (svg: SVGElement, opts: any) => {
+                applyLogoScaling(svg, opts, logoScale);
+              };
+            } else {
+              (phoneQRRef.current as any)._extension = undefined;
+            }
             phoneQRRef.current.update(phoneOptions);
           }
         }
@@ -203,6 +257,12 @@ export const QRPreview = forwardRef<QRPreviewRef, QRPreviewProps>(function QRPre
       };
 
       const exportInstance = new QRCodeStyling(exportOptions);
+      if (design.logo.dataUrl) {
+        (exportInstance as any)._extension = (svg: SVGElement, opts: any) => {
+          applyLogoScaling(svg, opts, design.logo.sizeRatio || 0.25);
+        };
+        exportInstance.update(exportOptions);
+      }
 
       let finalBlob: Blob | null = null;
 
@@ -272,7 +332,7 @@ export const QRPreview = forwardRef<QRPreviewRef, QRPreviewProps>(function QRPre
         throw new Error('Unable to render QR code image data for download.');
       }
 
-      // Convert Blob to Data URL so it can be streamed via HTTP API or downloaded directly without Blob UUID issues
+      // Convert Blob to Data URL
       const dataUrl = await new Promise<string>((resolve, reject) => {
         const reader = new FileReader();
         reader.onloadend = () => {
@@ -286,87 +346,88 @@ export const QRPreview = forwardRef<QRPreviewRef, QRPreviewProps>(function QRPre
         reader.readAsDataURL(finalBlob!);
       });
 
-      console.log('[QR Studio] 5a. Binary blob generated:', {
+      console.log('[BrandQR] Binary blob generated:', {
         bytes: finalBlob.size,
         type: finalBlob.type,
         targetFileName: fullFileName
       });
-      console.log('[QR Studio] 5b. Base64 Data URL ready, length:', dataUrl.length);
-
-      // ─── UNIVERSAL DEFAULT BROWSER DOWNLOAD ENGINE (Desktop & Mobile) ───
-      console.log('[QR Studio] 🚀 Initiating default browser download engine for:', fullFileName);
 
       const mimeType = format === 'svg' ? 'image/svg+xml' : 'image/png';
       const isIOS = typeof navigator !== 'undefined' && /iPhone|iPad|iPod/i.test(navigator.userAgent);
-      let downloadedViaAnchor = false;
 
-      // ─── 1. Client-Side Anchor Download (Desktop Chrome/Edge/Firefox & Android Chrome) ───
-      // Triggers the browser's default download manager / download tray directly
-      if (!isIOS) {
-        try {
-          const downloadLink = document.createElement('a');
-          downloadLink.download = fullFileName;
-          downloadLink.href = dataUrl;
-          downloadLink.style.position = 'fixed';
-          downloadLink.style.left = '-9999px';
-          downloadLink.style.top = '-9999px';
-          downloadLink.style.opacity = '0';
-          document.body.appendChild(downloadLink);
-          downloadLink.click();
-          console.log('[QR Studio] ✅ Success via direct anchor download engine!');
-          downloadedViaAnchor = true;
-          setTimeout(() => {
-            if (downloadLink.parentNode) {
-              downloadLink.parentNode.removeChild(downloadLink);
-            }
-          }, 1500);
-        } catch (anchorErr) {
-          console.warn('[QR Studio] Direct anchor failed, falling back to HTTP stream:', anchorErr);
+      // Preferred standard browser download: Direct invisible anchor download with Blob URL
+      try {
+        const objectUrl = URL.createObjectURL(finalBlob);
+        const link = document.createElement('a');
+        link.style.display = 'none';
+        link.href = objectUrl;
+        link.download = fullFileName;
+        link.setAttribute('target', '_self');
+        link.rel = 'noopener';
+
+        document.body.appendChild(link);
+        link.click();
+
+        setTimeout(() => {
+          if (link.parentNode) {
+            link.parentNode.removeChild(link);
+          }
+          URL.revokeObjectURL(objectUrl);
+        }, 1500);
+
+        if (!isIOS) {
+          return {
+            success: true,
+            isMobile: isMobileDevice(),
+            sharedViaWebShare: false,
+            dataUrl,
+            blob: finalBlob,
+            fileName: fullFileName,
+            format,
+          };
         }
+      } catch (blobDownloadErr) {
+        console.warn('[BrandQR] Direct blob URL download failed, falling back to stream endpoint:', blobDownloadErr);
       }
 
-      // ─── 2. HTTP Content-Disposition Stream (iOS Safari / Mobile Fallback) ───
-      // Triggers Safari's native download manager ("Do you want to download 'filename'?")
-      // and writes the file directly to the device's Downloads folder using the native browser engine.
-      if (!downloadedViaAnchor) {
-        try {
-          console.log('[QR Studio] 🌐 Triggering native browser download via Content-Disposition form...');
-          const form = document.createElement('form');
-          form.method = 'POST';
-          form.action = '/api/download';
-          form.style.display = 'none';
+      // Server Stream Fallback with Content-Disposition attachment headers
+      try {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/api/download-stream';
+        form.style.display = 'none';
+        form.target = '_self';
 
-          const fileInput = document.createElement('input');
-          fileInput.type = 'hidden';
-          fileInput.name = 'fileName';
-          fileInput.value = fullFileName;
-          form.appendChild(fileInput);
+        const fileInput = document.createElement('input');
+        fileInput.type = 'hidden';
+        fileInput.name = 'fileName';
+        fileInput.value = fullFileName;
+        form.appendChild(fileInput);
 
-          const mimeInput = document.createElement('input');
-          mimeInput.type = 'hidden';
-          mimeInput.name = 'mimeType';
-          mimeInput.value = mimeType;
-          form.appendChild(mimeInput);
+        const mimeInput = document.createElement('input');
+        mimeInput.type = 'hidden';
+        mimeInput.name = 'mimeType';
+        mimeInput.value = mimeType;
+        form.appendChild(mimeInput);
 
-          const dataInput = document.createElement('input');
-          dataInput.type = 'hidden';
-          dataInput.name = 'data';
-          dataInput.value = dataUrl;
-          form.appendChild(dataInput);
+        const dataInput = document.createElement('input');
+        dataInput.type = 'hidden';
+        dataInput.name = 'dataUrl';
+        dataInput.value = dataUrl;
+        form.appendChild(dataInput);
 
-          document.body.appendChild(form);
-          form.submit();
+        document.body.appendChild(form);
+        form.submit();
 
-          setTimeout(() => {
-            if (form.parentNode) {
-              form.parentNode.removeChild(form);
-            }
-          }, 2000);
-        } catch (formErr) {
-          console.warn('[QR Studio] Form stream failed, falling back to FileSaver:', formErr);
-          const { saveAs } = await import('file-saver');
-          saveAs(finalBlob, fullFileName);
-        }
+        setTimeout(() => {
+          if (form.parentNode) {
+            form.parentNode.removeChild(form);
+          }
+        }, 2000);
+      } catch (formErr) {
+        console.warn('[BrandQR] Form stream failed, falling back to FileSaver:', formErr);
+        const { saveAs } = await import('file-saver');
+        saveAs(finalBlob, fullFileName);
       }
 
       return {
@@ -393,6 +454,13 @@ export const QRPreview = forwardRef<QRPreviewRef, QRPreviewProps>(function QRPre
       };
 
       const exportInstance = new QRCodeStyling(exportOptions);
+      if (design.logo.dataUrl) {
+        (exportInstance as any)._extension = (svg: SVGElement, opts: any) => {
+          applyLogoScaling(svg, opts, design.logo.sizeRatio || 0.25);
+        };
+        exportInstance.update(exportOptions);
+      }
+
       const rawBlob = await exportInstance.getRawData('png');
 
       if (!rawBlob) {
@@ -421,24 +489,24 @@ export const QRPreview = forwardRef<QRPreviewRef, QRPreviewProps>(function QRPre
   return (
     <div className="w-full space-y-4">
       {/* Preview Card Header & View Switcher */}
-      <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-2xs space-y-4">
-        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+      <div className="bg-white rounded-2xl border border-[#E5E5E5] p-4 shadow-2xs space-y-4">
+        <div className="flex items-center justify-between border-b border-[#E5E5E5] pb-3">
           <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-xs font-semibold text-slate-900 uppercase tracking-wider">
+            <span className="w-2.5 h-2.5 rounded-full bg-[#FF6B2C] animate-pulse" />
+            <span className="text-xs font-semibold text-[#171717] uppercase tracking-wider">
               Real-Time Preview
             </span>
-            <span className="text-xs text-slate-400">({typeName})</span>
+            <span className="text-xs text-[#737373]">({typeName})</span>
           </div>
 
           {/* Toggle between Flat Card and Phone Mockup */}
-          <div className="flex items-center bg-slate-100 p-0.5 rounded-xl text-xs font-medium text-slate-600">
+          <div className="flex items-center bg-[#FAFAFA] border border-[#E5E5E5] p-0.5 rounded-xl text-xs font-medium text-[#737373]">
             <button
               type="button"
               onClick={() => setViewMode('canvas')}
               className={cn(
                 'flex items-center gap-1.5 px-2.5 py-1 rounded-lg transition cursor-pointer',
-                viewMode === 'canvas' ? 'bg-white text-slate-900 shadow-2xs font-semibold' : 'hover:text-slate-900'
+                viewMode === 'canvas' ? 'bg-white text-[#171717] shadow-2xs font-semibold' : 'hover:text-[#171717]'
               )}
             >
               <Monitor className="w-3.5 h-3.5" />
@@ -449,7 +517,7 @@ export const QRPreview = forwardRef<QRPreviewRef, QRPreviewProps>(function QRPre
               onClick={() => setViewMode('phone')}
               className={cn(
                 'flex items-center gap-1.5 px-2.5 py-1 rounded-lg transition cursor-pointer',
-                viewMode === 'phone' ? 'bg-white text-slate-900 shadow-2xs font-semibold' : 'hover:text-slate-900'
+                viewMode === 'phone' ? 'bg-white text-[#171717] shadow-2xs font-semibold' : 'hover:text-[#171717]'
               )}
             >
               <Smartphone className="w-3.5 h-3.5" />
@@ -459,13 +527,13 @@ export const QRPreview = forwardRef<QRPreviewRef, QRPreviewProps>(function QRPre
         </div>
 
         {/* Center Stage Preview Area */}
-        <div className="flex items-center justify-center p-3 sm:p-6 bg-slate-50/70 rounded-2xl border border-slate-100 min-h-[340px] relative overflow-hidden">
+        <div className="flex items-center justify-center p-3 sm:p-6 bg-[#FAFAFA] rounded-2xl border border-[#E5E5E5] min-h-[340px] relative overflow-hidden">
           {/* Flat Canvas View - Always in DOM, toggled via CSS */}
           <div className={cn(viewMode === 'canvas' ? 'flex' : 'hidden', 'items-center justify-center w-full')}>
             <div
               className={cn(
                 'relative p-4 rounded-2xl shadow-md transition-all flex items-center justify-center',
-                design.backgroundTransparent ? 'bg-transparent border border-dashed border-slate-300' : 'bg-white'
+                design.backgroundTransparent ? 'bg-transparent border border-dashed border-[#E5E5E5]' : 'bg-white'
               )}
               style={{
                 backgroundColor: design.backgroundTransparent ? undefined : design.backgroundColor,
@@ -480,11 +548,11 @@ export const QRPreview = forwardRef<QRPreviewRef, QRPreviewProps>(function QRPre
 
           {/* Phone Frame Mockup View - Always in DOM, toggled via CSS */}
           <div className={cn(viewMode === 'phone' ? 'flex' : 'hidden', 'items-center justify-center w-full')}>
-            <div className="w-[280px] bg-slate-900 text-white rounded-[40px] p-4 shadow-xl border-4 border-slate-800 flex flex-col items-center">
+            <div className="w-[280px] bg-[#111111] text-white rounded-[40px] p-4 shadow-xl border-4 border-[#1C1C1C] flex flex-col items-center">
               {/* Notch / Dynamic Island */}
               <div className="w-24 h-4 bg-black rounded-full mb-3" />
               <div className="w-full text-center mb-3">
-                <span className="text-[10px] text-slate-400 font-mono tracking-wider uppercase">
+                <span className="text-[10px] text-[#737373] font-mono tracking-wider uppercase">
                   Scan Camera Active
                 </span>
                 <p className="text-xs font-semibold text-white mt-0.5">
@@ -505,8 +573,8 @@ export const QRPreview = forwardRef<QRPreviewRef, QRPreviewProps>(function QRPre
                 />
               </div>
 
-              <div className="w-full px-2 py-1.5 bg-slate-800/80 rounded-xl text-center">
-                <span className="text-[11px] text-indigo-300 font-medium truncate block">
+              <div className="w-full px-2 py-1.5 bg-[#1C1C1C] border border-[#333333] rounded-xl text-center">
+                <span className="text-[11px] text-[#FF6B2C] font-medium truncate block">
                   {payload || 'No destination link'}
                 </span>
               </div>
@@ -518,46 +586,35 @@ export const QRPreview = forwardRef<QRPreviewRef, QRPreviewProps>(function QRPre
             <div className="absolute inset-0 bg-white/95 backdrop-blur-xs flex flex-col items-center justify-center p-6 text-center z-10 transition-opacity">
               {!payload || payload.trim() === '' ? (
                 <>
-                  <div className="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-3 border border-indigo-100 shadow-2xs">
-                    <QrCode className="w-7 h-7 stroke-[1.5]" />
+                  <div className="w-12 h-12 rounded-2xl bg-[#FFF2EB] border border-[#FFE6D9] text-[#FF6B2C] flex items-center justify-center mb-3 shadow-2xs">
+                    <span className="text-lg font-bold">1</span>
                   </div>
-                  <p className="text-sm font-bold text-slate-900">
-                    Awaiting QR Content
-                  </p>
-                  <p className="text-xs text-slate-500 max-w-xs mt-1 leading-relaxed">
-                    Enter your destination details on the left to generate and preview your branded QR code in real-time.
+                  <h4 className="text-sm font-bold text-[#171717]">
+                    Enter Content to Generate Code
+                  </h4>
+                  <p className="text-xs text-[#737373] mt-1 max-w-xs leading-relaxed">
+                    Choose a format above and enter your URL, contact info, or Wi-Fi credentials to activate the live engine.
                   </p>
                 </>
               ) : (
                 <>
-                  <div className="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mb-3 border border-amber-200 shadow-2xs">
-                    <AlertCircle className="w-7 h-7 stroke-[1.5]" />
+                  <div className="w-12 h-12 rounded-2xl bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center mb-3 shadow-2xs">
+                    <span className="text-lg font-bold">!</span>
                   </div>
-                  <p className="text-sm font-bold text-slate-900">
-                    Incomplete or Invalid Input
-                  </p>
-                  <p className="text-xs text-slate-500 max-w-xs mt-1 leading-relaxed">
-                    Please complete the required fields on the left to generate your scannable code.
+                  <h4 className="text-sm font-bold text-[#171717]">
+                    Content Incomplete
+                  </h4>
+                  <p className="text-xs text-[#737373] mt-1 max-w-xs leading-relaxed">
+                    Please provide all required fields in the form to generate a valid, compliant QR code.
                   </p>
                 </>
               )}
             </div>
           )}
         </div>
-
-        {/* Scan Instruction Footer */}
-        <div className="flex items-center justify-between text-xs text-slate-500 pt-1">
-          <div className="flex items-center gap-1.5">
-            <Sparkles className="w-3.5 h-3.5 text-indigo-500" />
-            <span>Ready for iOS Camera & Google Lens</span>
-          </div>
-          <span className="font-mono text-[11px] text-slate-400">
-            {payload ? `${payload.length} chars` : '0 chars'}
-          </span>
-        </div>
       </div>
 
-      {/* Embedded Live Scan Reliability Meter */}
+      {/* Live Scan Reliability Meter */}
       <ScanReliabilityMeter report={reliabilityReport} />
     </div>
   );

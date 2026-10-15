@@ -57,7 +57,7 @@ export function Modal({
     >
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity animate-in fade-in"
+        className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity animate-in fade-in"
         onClick={onClose}
         aria-hidden="true"
       />
@@ -66,24 +66,24 @@ export function Modal({
       <div
         ref={modalRef}
         className={cn(
-          'relative w-full bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden z-10 my-auto transform animate-in fade-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]',
+          'relative w-full bg-white rounded-2xl shadow-2xl border border-[#E5E5E5] overflow-hidden z-10 my-auto transform animate-in fade-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]',
           maxWidthClass
         )}
       >
-        <div className="flex items-start justify-between px-5 pt-5 pb-3 border-b border-slate-100">
+        <div className="flex items-start justify-between px-5 pt-5 pb-3 border-b border-[#E5E5E5]">
           <div>
-            <h2 id="modal-title" className="text-lg font-semibold text-slate-900">
+            <h2 id="modal-title" className="text-lg font-semibold text-[#171717]">
               {title}
             </h2>
             {description && (
-              <p className="text-xs text-slate-500 mt-0.5">{description}</p>
+              <p className="text-xs text-[#737373] mt-0.5">{description}</p>
             )}
           </div>
           <button
             type="button"
             onClick={onClose}
             aria-label="Close dialog"
-            className="p-1.5 -mr-1 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="p-1.5 -mr-1 text-[#737373] hover:text-[#171717] hover:bg-[#FAFAFA] rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-[#FF6B2C]"
           >
             <X className="w-5 h-5" />
           </button>

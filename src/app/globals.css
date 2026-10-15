@@ -1,8 +1,25 @@
 @import "tailwindcss";
 
+@theme {
+  --color-aurex-orange: #FF6B2C;
+  --color-aurex-orange-hover: #E85B1E;
+  --color-aurex-orange-light: #FFF2EB;
+  --color-aurex-orange-50: #FFF5F0;
+  --color-aurex-orange-100: #FFE6D9;
+  --color-aurex-dark: #111111;
+  --color-aurex-dark-secondary: #1C1C1C;
+  --color-aurex-border: #E5E5E5;
+  --color-aurex-bg: #FAFAFA;
+  --color-aurex-text: #171717;
+  --color-aurex-text-muted: #737373;
+}
+
 :root {
-  --background: #f8fafc;
-  --foreground: #0f172a;
+  --background: #FAFAFA;
+  --foreground: #171717;
+  --brand-orange: #FF6B2C;
+  --brand-orange-hover: #E85B1E;
+  --brand-border: #E5E5E5;
 }
 
 body {
@@ -23,11 +40,11 @@ body {
   scrollbar-width: none;
 }
 
-/* Accessible focus visible */
+/* Accessible focus visible with Aurex Orange */
 button:focus-visible,
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible {
-  outline: 2px solid #4f46e5;
+  outline: 2px solid #FF6B2C;
   outline-offset: 2px;
 }

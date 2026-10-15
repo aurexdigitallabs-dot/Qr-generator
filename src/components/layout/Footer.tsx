@@ -1,58 +1,92 @@
 'use client';
 
 import React from 'react';
-import { ShieldCheck, Sparkles, Layers, Lock } from 'lucide-react';
+import Image from 'next/image';
+import { ShieldCheck, Lock, Sparkles, CheckCircle2 } from 'lucide-react';
 
 export function Footer() {
   return (
-    <footer className="w-full bg-white border-t border-slate-200/80 mt-16 py-10">
+    <footer className="w-full bg-white border-t border-[#E5E5E5] mt-16 py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
-          <div className="space-y-2">
-            <span className="text-xs font-bold text-slate-900 uppercase tracking-wider block">
-              High-Fidelity Vectors
-            </span>
-            <p className="text-xs text-slate-500 leading-relaxed">
-              Export pixel-perfect SVG vectors and ultra-resolution 2048px PNGs ready for packaging, business cards, and outdoor billboards.
+        {/* Main Footer Brand & Capability Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-8 mb-10">
+          {/* Brand & Attribution Column (4 cols) */}
+          <div className="md:col-span-4 space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="relative h-12 w-9 shrink-0">
+                <Image
+                  src="/Aurex.png"
+                  alt="Aurex Digitals"
+                  width={36}
+                  height={48}
+                  className="h-full w-auto object-contain"
+                />
+              </div>
+              <div>
+                <span className="text-base font-bold text-[#171717] tracking-tight block">
+                  BrandQR
+                </span>
+                <span className="text-xs text-[#737373]">
+                  Smart QR Codes. Your Brand.
+                </span>
+              </div>
+            </div>
+
+            <p className="text-xs text-[#737373] leading-relaxed max-w-sm">
+              Create QR codes that carry your brand identity. Engineered for crisp print resolution, digital sharing, and maximum scan reliability.
             </p>
+
+            <div className="pt-2">
+              <span className="inline-flex items-center gap-2 px-2.5 py-1 rounded-lg text-xs font-semibold bg-[#FFF2EB] text-[#FF6B2C] border border-[#FFE6D9]">
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Designed &amp; Developed by Aurex Digitals</span>
+              </span>
+              <p className="text-[11px] text-[#737373] font-medium tracking-wide mt-2">
+                Master The Market.
+              </p>
+            </div>
           </div>
 
-          <div className="space-y-2">
-            <span className="text-xs font-bold text-slate-900 uppercase tracking-wider block">
-              Logo Safety & Protection
-            </span>
-            <p className="text-xs text-slate-500 leading-relaxed">
-              Automatic Level-H Reed-Solomon error correction preserves up to 30% recovery, ensuring scannability even with custom brand emblems.
-            </p>
-          </div>
+          {/* Capabilities & Specifications (8 cols) */}
+          <div className="md:col-span-8 grid grid-cols-1 sm:grid-cols-3 gap-6">
+            <div className="space-y-2 p-3.5 rounded-xl bg-[#FAFAFA] border border-[#E5E5E5]">
+              <span className="text-xs font-bold text-[#171717] uppercase tracking-wider block">
+                High-Fidelity Vectors
+              </span>
+              <p className="text-xs text-[#737373] leading-relaxed">
+                Export pixel-perfect SVG vectors and ultra-resolution 2048px PNGs ready for packaging, business cards, and outdoor billboards.
+              </p>
+            </div>
 
-          <div className="space-y-2">
-            <span className="text-xs font-bold text-slate-900 uppercase tracking-wider block">
-              Universal Standard Formats
-            </span>
-            <p className="text-xs text-slate-500 leading-relaxed">
-              Fully compliant with ISO/IEC 18004 standards. Supports vCard 3.0, WPA Wi-Fi, and standard deep-linking protocols.
-            </p>
-          </div>
+            <div className="space-y-2 p-3.5 rounded-xl bg-[#FAFAFA] border border-[#E5E5E5]">
+              <span className="text-xs font-bold text-[#171717] uppercase tracking-wider block">
+                Reed-Solomon Level-H
+              </span>
+              <p className="text-xs text-[#737373] leading-relaxed">
+                Up to 30% error correction preserves scannability even when customized with brand logos, custom colors, and unique shapes.
+              </p>
+            </div>
 
-          <div className="space-y-2">
-            <span className="text-xs font-bold text-slate-900 uppercase tracking-wider block">
-              Privacy & Local Processing
-            </span>
-            <p className="text-xs text-slate-500 leading-relaxed">
-              Static QR generation occurs locally in your browser. No third-party tracking redirects or scan hijacking.
-            </p>
+            <div className="space-y-2 p-3.5 rounded-xl bg-[#FAFAFA] border border-[#E5E5E5]">
+              <span className="text-xs font-bold text-[#171717] uppercase tracking-wider block">
+                Privacy First Engine
+              </span>
+              <p className="text-xs text-[#737373] leading-relaxed">
+                QR generation happens locally in your browser. No middleman redirects or link tracking — pure direct destination codes.
+              </p>
+            </div>
           </div>
         </div>
 
-        <div className="pt-6 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
-          <p>© 2026 BrandQR Studio. Built for professional designers, businesses, and developers.</p>
+        {/* Bottom Attribution Bar */}
+        <div className="pt-6 border-t border-[#E5E5E5] flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#737373]">
+          <p>© 2025 BrandQR. A product by Aurex Digitals. All rights reserved.</p>
           <div className="flex items-center gap-4">
-            <span className="inline-flex items-center gap-1 text-slate-600 font-medium">
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" /> WCAG 2.2 Checked
+            <span className="inline-flex items-center gap-1.5 text-[#171717] font-medium">
+              <ShieldCheck className="w-4 h-4 text-[#FF6B2C]" /> ISO/IEC 18004 Standard
             </span>
-            <span className="inline-flex items-center gap-1 text-slate-600 font-medium">
-              <Lock className="w-3.5 h-3.5 text-indigo-600" /> Client-Side Vector Engine
+            <span className="inline-flex items-center gap-1.5 text-[#171717] font-medium">
+              <Lock className="w-3.5 h-3.5 text-[#737373]" /> Client-Side Vector Engine
             </span>
           </div>
         </div>

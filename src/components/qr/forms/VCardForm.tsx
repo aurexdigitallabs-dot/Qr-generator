@@ -54,11 +54,11 @@ export function VCardForm({ initialData, onChange }: VCardFormProps) {
     <div className="space-y-3.5">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
-          <label htmlFor="vcard-fn" className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+          <label htmlFor="vcard-fn" className="block text-xs font-semibold text-[#171717] uppercase tracking-wider mb-1">
             First Name <span className="text-rose-500">*</span>
           </label>
-          <div className="relative rounded-xl shadow-xs">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+          <div className="relative rounded-xl shadow-2xs">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#737373]">
               <User className="w-3.5 h-3.5" />
             </div>
             <input
@@ -66,7 +66,7 @@ export function VCardForm({ initialData, onChange }: VCardFormProps) {
               type="text"
               {...register('firstName')}
               placeholder="First Name"
-              className="block w-full pl-9 pr-3 py-2 text-sm bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition"
+              className="block w-full pl-9 pr-3 py-2 text-sm bg-white border border-[#E5E5E5] rounded-xl text-[#171717] placeholder:text-[#737373] focus:outline-none focus:ring-2 focus:ring-[#FF6B2C] focus:border-[#FF6B2C] transition"
             />
           </div>
           {errors.firstName && (
@@ -75,7 +75,7 @@ export function VCardForm({ initialData, onChange }: VCardFormProps) {
         </div>
 
         <div>
-          <label htmlFor="vcard-ln" className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+          <label htmlFor="vcard-ln" className="block text-xs font-semibold text-[#171717] uppercase tracking-wider mb-1">
             Last Name
           </label>
           <input
@@ -83,18 +83,18 @@ export function VCardForm({ initialData, onChange }: VCardFormProps) {
             type="text"
             {...register('lastName')}
             placeholder="Last Name"
-            className="block w-full px-3 py-2 text-sm bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition"
+            className="block w-full px-3 py-2 text-sm bg-white border border-[#E5E5E5] rounded-xl text-[#171717] placeholder:text-[#737373] focus:outline-none focus:ring-2 focus:ring-[#FF6B2C] focus:border-[#FF6B2C] transition"
           />
         </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
-          <label htmlFor="vcard-org" className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+          <label htmlFor="vcard-org" className="block text-xs font-semibold text-[#171717] uppercase tracking-wider mb-1">
             Company / Org
           </label>
-          <div className="relative rounded-xl shadow-xs">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+          <div className="relative rounded-xl shadow-2xs">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#737373]">
               <Building className="w-3.5 h-3.5" />
             </div>
             <input
@@ -102,17 +102,17 @@ export function VCardForm({ initialData, onChange }: VCardFormProps) {
               type="text"
               {...register('organization')}
               placeholder="Company Name"
-              className="block w-full pl-9 pr-3 py-2 text-sm bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition"
+              className="block w-full pl-9 pr-3 py-2 text-sm bg-white border border-[#E5E5E5] rounded-xl text-[#171717] placeholder:text-[#737373] focus:outline-none focus:ring-2 focus:ring-[#FF6B2C] focus:border-[#FF6B2C] transition"
             />
           </div>
         </div>
 
         <div>
-          <label htmlFor="vcard-title" className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+          <label htmlFor="vcard-title" className="block text-xs font-semibold text-[#171717] uppercase tracking-wider mb-1">
             Job Title
           </label>
-          <div className="relative rounded-xl shadow-xs">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+          <div className="relative rounded-xl shadow-2xs">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#737373]">
               <Briefcase className="w-3.5 h-3.5" />
             </div>
             <input
@@ -120,7 +120,7 @@ export function VCardForm({ initialData, onChange }: VCardFormProps) {
               type="text"
               {...register('title')}
               placeholder="e.g. Design Lead"
-              className="block w-full pl-9 pr-3 py-2 text-sm bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition"
+              className="block w-full pl-9 pr-3 py-2 text-sm bg-white border border-[#E5E5E5] rounded-xl text-[#171717] placeholder:text-[#737373] focus:outline-none focus:ring-2 focus:ring-[#FF6B2C] focus:border-[#FF6B2C] transition"
             />
           </div>
         </div>
@@ -128,11 +128,11 @@ export function VCardForm({ initialData, onChange }: VCardFormProps) {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
-          <label htmlFor="vcard-mobile" className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+          <label htmlFor="vcard-mobile" className="block text-xs font-semibold text-[#171717] uppercase tracking-wider mb-1">
             Mobile Phone
           </label>
-          <div className="relative rounded-xl shadow-xs">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+          <div className="relative rounded-xl shadow-2xs">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#737373]">
               <Phone className="w-3.5 h-3.5" />
             </div>
             <input
@@ -140,17 +140,17 @@ export function VCardForm({ initialData, onChange }: VCardFormProps) {
               type="tel"
               {...register('mobile')}
               placeholder="+1 555 0192"
-              className="block w-full pl-9 pr-3 py-2 text-sm bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition"
+              className="block w-full pl-9 pr-3 py-2 text-sm bg-white border border-[#E5E5E5] rounded-xl text-[#171717] placeholder:text-[#737373] focus:outline-none focus:ring-2 focus:ring-[#FF6B2C] focus:border-[#FF6B2C] transition"
             />
           </div>
         </div>
 
         <div>
-          <label htmlFor="vcard-email" className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+          <label htmlFor="vcard-email" className="block text-xs font-semibold text-[#171717] uppercase tracking-wider mb-1">
             Email Address
           </label>
-          <div className="relative rounded-xl shadow-xs">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+          <div className="relative rounded-xl shadow-2xs">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#737373]">
               <Mail className="w-3.5 h-3.5" />
             </div>
             <input
@@ -158,7 +158,7 @@ export function VCardForm({ initialData, onChange }: VCardFormProps) {
               type="email"
               {...register('email')}
               placeholder="you@domain.com"
-              className="block w-full pl-9 pr-3 py-2 text-sm bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition"
+              className="block w-full pl-9 pr-3 py-2 text-sm bg-white border border-[#E5E5E5] rounded-xl text-[#171717] placeholder:text-[#737373] focus:outline-none focus:ring-2 focus:ring-[#FF6B2C] focus:border-[#FF6B2C] transition"
             />
           </div>
           {errors.email && (
@@ -168,11 +168,11 @@ export function VCardForm({ initialData, onChange }: VCardFormProps) {
       </div>
 
       <div>
-        <label htmlFor="vcard-web" className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+        <label htmlFor="vcard-web" className="block text-xs font-semibold text-[#171717] uppercase tracking-wider mb-1">
           Website / Portfolio
         </label>
-        <div className="relative rounded-xl shadow-xs">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+        <div className="relative rounded-xl shadow-2xs">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#737373]">
             <Globe className="w-3.5 h-3.5" />
           </div>
           <input
@@ -180,7 +180,7 @@ export function VCardForm({ initialData, onChange }: VCardFormProps) {
             type="text"
             {...register('website')}
             placeholder="https://yourportfolio.com"
-            className="block w-full pl-9 pr-3 py-2 text-sm bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition"
+            className="block w-full pl-9 pr-3 py-2 text-sm bg-white border border-[#E5E5E5] rounded-xl text-[#171717] placeholder:text-[#737373] focus:outline-none focus:ring-2 focus:ring-[#FF6B2C] focus:border-[#FF6B2C] transition"
           />
         </div>
       </div>
@@ -190,7 +190,7 @@ export function VCardForm({ initialData, onChange }: VCardFormProps) {
         <button
           type="button"
           onClick={() => setShowAddress(!showAddress)}
-          className="flex items-center gap-1.5 text-xs font-medium text-indigo-600 hover:text-indigo-700 py-1"
+          className="flex items-center gap-1.5 text-xs font-medium text-[#FF6B2C] hover:text-[#FF6B2C] py-1"
         >
           <MapPin className="w-3.5 h-3.5" />
           <span>{showAddress ? 'Hide Postal Address' : '+ Add Postal Address'}</span>
@@ -198,9 +198,9 @@ export function VCardForm({ initialData, onChange }: VCardFormProps) {
         </button>
 
         {showAddress && (
-          <div className="mt-2.5 p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2.5">
+          <div className="mt-2.5 p-3 bg-slate-50 border border-[#E5E5E5] rounded-xl space-y-2.5">
             <div>
-              <label htmlFor="vcard-street" className="block text-xs font-medium text-slate-600 mb-1">
+              <label htmlFor="vcard-street" className="block text-xs font-medium text-[#737373] mb-1">
                 Street Address
               </label>
               <input
@@ -208,12 +208,12 @@ export function VCardForm({ initialData, onChange }: VCardFormProps) {
                 type="text"
                 {...register('street')}
                 placeholder="100 Market St, Suite 400"
-                className="block w-full px-3 py-1.5 text-sm bg-white border border-slate-200 rounded-lg text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition"
+                className="block w-full px-3 py-1.5 text-sm bg-white border border-[#E5E5E5] rounded-lg text-[#171717] placeholder:text-[#737373] focus:outline-none focus:ring-2 focus:ring-[#FF6B2C] focus:border-[#FF6B2C] transition"
               />
             </div>
             <div className="grid grid-cols-3 gap-2">
               <div>
-                <label htmlFor="vcard-city" className="block text-xs font-medium text-slate-600 mb-1">
+                <label htmlFor="vcard-city" className="block text-xs font-medium text-[#737373] mb-1">
                   City
                 </label>
                 <input
@@ -221,11 +221,11 @@ export function VCardForm({ initialData, onChange }: VCardFormProps) {
                   type="text"
                   {...register('city')}
                   placeholder="San Francisco"
-                  className="block w-full px-2.5 py-1.5 text-sm bg-white border border-slate-200 rounded-lg text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition"
+                  className="block w-full px-2.5 py-1.5 text-sm bg-white border border-[#E5E5E5] rounded-lg text-[#171717] placeholder:text-[#737373] focus:outline-none focus:ring-2 focus:ring-[#FF6B2C] focus:border-[#FF6B2C] transition"
                 />
               </div>
               <div>
-                <label htmlFor="vcard-state" className="block text-xs font-medium text-slate-600 mb-1">
+                <label htmlFor="vcard-state" className="block text-xs font-medium text-[#737373] mb-1">
                   State
                 </label>
                 <input
@@ -233,11 +233,11 @@ export function VCardForm({ initialData, onChange }: VCardFormProps) {
                   type="text"
                   {...register('state')}
                   placeholder="CA"
-                  className="block w-full px-2.5 py-1.5 text-sm bg-white border border-slate-200 rounded-lg text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition"
+                  className="block w-full px-2.5 py-1.5 text-sm bg-white border border-[#E5E5E5] rounded-lg text-[#171717] placeholder:text-[#737373] focus:outline-none focus:ring-2 focus:ring-[#FF6B2C] focus:border-[#FF6B2C] transition"
                 />
               </div>
               <div>
-                <label htmlFor="vcard-country" className="block text-xs font-medium text-slate-600 mb-1">
+                <label htmlFor="vcard-country" className="block text-xs font-medium text-[#737373] mb-1">
                   Country
                 </label>
                 <input
@@ -245,7 +245,7 @@ export function VCardForm({ initialData, onChange }: VCardFormProps) {
                   type="text"
                   {...register('country')}
                   placeholder="USA"
-                  className="block w-full px-2.5 py-1.5 text-sm bg-white border border-slate-200 rounded-lg text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition"
+                  className="block w-full px-2.5 py-1.5 text-sm bg-white border border-[#E5E5E5] rounded-lg text-[#171717] placeholder:text-[#737373] focus:outline-none focus:ring-2 focus:ring-[#FF6B2C] focus:border-[#FF6B2C] transition"
                 />
               </div>
             </div>

@@ -12,6 +12,7 @@ import {
 } from '@/lib/firebase/services';
 import { isFirebaseConfigured } from '@/lib/firebase/client';
 import { Mail, Lock, AlertCircle, CheckCircle2, Loader2, Info, ShieldCheck, Download } from 'lucide-react';
+import Image from 'next/image';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -93,7 +94,7 @@ export function AuthModal({ isOpen, onClose, onSuccess, reason }: AuthModalProps
           throw new Error('Password must be at least 6 characters');
         }
         await registerWithEmail(email, password);
-        onSuccess('Account created successfully! Welcome to Brand QR Studio.');
+        onSuccess('Account created successfully! Welcome to BrandQR by Aurex Digitals.');
         handleClose();
       } else if (mode === 'forgot_password') {
         await resetPassword(email);
@@ -107,27 +108,48 @@ export function AuthModal({ isOpen, onClose, onSuccess, reason }: AuthModalProps
   };
 
   const title = {
-    sign_in: 'Sign In to Account',
+    sign_in: 'Sign In to BrandQR',
     sign_up: 'Create Free Account',
     forgot_password: 'Reset Password',
   }[mode];
 
   const description = {
-    sign_in: 'Access and manage your cloud-saved brand QR designs.',
-    sign_up: 'Save custom designs, logos, and sync across any browser.',
+    sign_in: 'Access and manage your cloud-saved brand QR designs and download history.',
+    sign_up: 'Save custom designs, logos, and sync across all your devices.',
     forgot_password: 'Enter your email to receive a secure recovery link.',
   }[mode];
 
   return (
     <Modal isOpen={isOpen} onClose={handleClose} title={title} description={description} maxWidth="sm">
       <div className="space-y-4">
+        {/* Subtle Aurex branding bar */}
+        <div className="flex items-center justify-between pb-3 border-b border-[#E5E5E5]">
+          <div className="flex items-center gap-2">
+            <div className="relative h-5 w-5 shrink-0 flex items-center justify-center">
+              <Image
+                src="/Aurex%20icon%20only.png"
+                alt="Aurex Digitals"
+                width={20}
+                height={18}
+                className="h-full w-auto object-contain"
+              />
+            </div>
+            <span className="text-xs font-semibold text-[#171717]">
+              BrandQR by Aurex Digitals
+            </span>
+          </div>
+          <span className="text-[10px] text-[#737373] font-medium uppercase tracking-wider">
+            Cloud Sync
+          </span>
+        </div>
+
         {/* Context / Reason Notice (e.g. login required to download) */}
         {reason && (
-          <div className="p-3 bg-indigo-50 border border-indigo-200 rounded-xl flex items-start gap-2.5 text-xs text-indigo-900 shadow-2xs">
-            <Download className="w-4 h-4 text-indigo-600 shrink-0 mt-0.5" />
+          <div className="p-3 bg-[#FFF2EB] border border-[#FFE6D9] rounded-xl flex items-start gap-2.5 text-xs text-[#171717] shadow-2xs">
+            <Download className="w-4 h-4 text-[#FF6B2C] shrink-0 mt-0.5" />
             <div>
-              <p className="font-semibold text-indigo-950">Login Required to Download</p>
-              <p className="text-indigo-700 mt-0.5 leading-relaxed">{reason}</p>
+              <p className="font-semibold text-[#171717]">Authentication Required</p>
+              <p className="text-[#737373] mt-0.5 leading-relaxed">{reason}</p>
             </div>
           </div>
         )}
@@ -139,12 +161,12 @@ export function AuthModal({ isOpen, onClose, onSuccess, reason }: AuthModalProps
             <span className="font-medium">Live Firebase Cloud Sync Enabled</span>
           </div>
         ) : (
-          <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-start gap-2.5 text-xs text-slate-600">
-            <Info className="w-4 h-4 text-indigo-600 shrink-0 mt-0.5" />
+          <div className="p-3 bg-[#FAFAFA] border border-[#E5E5E5] rounded-xl flex items-start gap-2.5 text-xs text-[#737373]">
+            <Info className="w-4 h-4 text-[#FF6B2C] shrink-0 mt-0.5" />
             <div>
-              <p className="font-semibold text-slate-800">Firebase Not Configured</p>
-              <p className="mt-0.5 text-slate-500">
-                Supply your Firebase environment variables in <code className="text-indigo-600">.env.local</code>.
+              <p className="font-semibold text-[#171717]">Firebase Credentials</p>
+              <p className="mt-0.5 text-[#737373]">
+                Provide your Firebase environment variables in <code className="text-[#FF6B2C] font-mono">.env.local</code>.
               </p>
             </div>
           </div>
@@ -173,7 +195,7 @@ export function AuthModal({ isOpen, onClose, onSuccess, reason }: AuthModalProps
               type="button"
               onClick={handleGoogleSignIn}
               disabled={isLoading}
-              className="w-full flex items-center justify-center gap-2.5 py-2.5 px-4 bg-white border border-slate-200 hover:bg-slate-50 text-slate-800 text-xs font-semibold rounded-xl transition shadow-2xs cursor-pointer"
+              className="w-full flex items-center justify-center gap-2.5 py-2.5 px-4 bg-white border border-[#E5E5E5] hover:bg-[#FAFAFA] text-[#171717] text-xs font-semibold rounded-xl transition shadow-2xs cursor-pointer active:scale-[0.99]"
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24">
                 <path
@@ -197,8 +219,8 @@ export function AuthModal({ isOpen, onClose, onSuccess, reason }: AuthModalProps
             </button>
 
             <div className="relative flex items-center justify-center py-1">
-              <div className="border-t border-slate-200 w-full" />
-              <span className="bg-white px-2 text-[11px] uppercase tracking-wider text-slate-400 font-semibold absolute">
+              <div className="border-t border-[#E5E5E5] w-full" />
+              <span className="bg-white px-2 text-[10px] uppercase tracking-wider text-[#737373] font-semibold absolute">
                 or with email
               </span>
             </div>
@@ -208,11 +230,11 @@ export function AuthModal({ isOpen, onClose, onSuccess, reason }: AuthModalProps
         {/* Email & Password Form */}
         <form onSubmit={handleSubmit} className="space-y-3">
           <div>
-            <label htmlFor="auth-email" className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+            <label htmlFor="auth-email" className="block text-xs font-semibold text-[#171717] uppercase tracking-wider mb-1">
               Email Address
             </label>
-            <div className="relative rounded-xl shadow-xs">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+            <div className="relative rounded-xl shadow-2xs">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#737373]">
                 <Mail className="w-3.5 h-3.5" />
               </div>
               <input
@@ -222,7 +244,7 @@ export function AuthModal({ isOpen, onClose, onSuccess, reason }: AuthModalProps
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="name@company.com"
-                className="block w-full pl-9 pr-3 py-2 text-sm bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-600 transition"
+                className="block w-full pl-9 pr-3 py-2 text-sm bg-white border border-[#E5E5E5] rounded-xl text-[#171717] placeholder:text-[#737373] focus:outline-none focus:ring-2 focus:ring-[#FF6B2C] focus:border-[#FF6B2C] transition"
               />
             </div>
           </div>
@@ -230,7 +252,7 @@ export function AuthModal({ isOpen, onClose, onSuccess, reason }: AuthModalProps
           {mode !== 'forgot_password' && (
             <div>
               <div className="flex items-center justify-between mb-1">
-                <label htmlFor="auth-password" className="block text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                <label htmlFor="auth-password" className="block text-xs font-semibold text-[#171717] uppercase tracking-wider">
                   Password
                 </label>
                 {mode === 'sign_in' && (
@@ -240,14 +262,14 @@ export function AuthModal({ isOpen, onClose, onSuccess, reason }: AuthModalProps
                       setErrorMessage('');
                       setMode('forgot_password');
                     }}
-                    className="text-[11px] text-indigo-600 hover:text-indigo-800 font-medium"
+                    className="text-[11px] text-[#FF6B2C] hover:text-[#E85B1E] font-medium"
                   >
                     Forgot password?
                   </button>
                 )}
               </div>
-              <div className="relative rounded-xl shadow-xs">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+              <div className="relative rounded-xl shadow-2xs">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#737373]">
                   <Lock className="w-3.5 h-3.5" />
                 </div>
                 <input
@@ -257,7 +279,7 @@ export function AuthModal({ isOpen, onClose, onSuccess, reason }: AuthModalProps
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="block w-full pl-9 pr-3 py-2 text-sm bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-600 transition"
+                  className="block w-full pl-9 pr-3 py-2 text-sm bg-white border border-[#E5E5E5] rounded-xl text-[#171717] placeholder:text-[#737373] focus:outline-none focus:ring-2 focus:ring-[#FF6B2C] focus:border-[#FF6B2C] transition"
                 />
               </div>
             </div>
@@ -266,7 +288,7 @@ export function AuthModal({ isOpen, onClose, onSuccess, reason }: AuthModalProps
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-xl shadow-sm transition active:scale-[0.99] cursor-pointer"
+            className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-[#FF6B2C] hover:bg-[#E85B1E] text-white text-xs font-semibold rounded-xl shadow-xs transition active:scale-[0.99] cursor-pointer"
           >
             {isLoading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
             <span>
@@ -278,7 +300,7 @@ export function AuthModal({ isOpen, onClose, onSuccess, reason }: AuthModalProps
         </form>
 
         {/* Footer switch between modes */}
-        <div className="pt-2 border-t border-slate-100 text-center text-xs text-slate-500">
+        <div className="pt-2 border-t border-[#E5E5E5] text-center text-xs text-[#737373]">
           {mode === 'sign_in' && (
             <p>
               Don&apos;t have an account?{' '}
@@ -288,7 +310,7 @@ export function AuthModal({ isOpen, onClose, onSuccess, reason }: AuthModalProps
                   setErrorMessage('');
                   setMode('sign_up');
                 }}
-                className="text-indigo-600 hover:text-indigo-800 font-semibold"
+                className="text-[#FF6B2C] hover:text-[#E85B1E] font-semibold"
               >
                 Sign up free
               </button>
@@ -304,7 +326,7 @@ export function AuthModal({ isOpen, onClose, onSuccess, reason }: AuthModalProps
                   setErrorMessage('');
                   setMode('sign_in');
                 }}
-                className="text-indigo-600 hover:text-indigo-800 font-semibold"
+                className="text-[#FF6B2C] hover:text-[#E85B1E] font-semibold"
               >
                 Sign in
               </button>
@@ -320,7 +342,7 @@ export function AuthModal({ isOpen, onClose, onSuccess, reason }: AuthModalProps
                   setErrorMessage('');
                   setMode('sign_in');
                 }}
-                className="text-indigo-600 hover:text-indigo-800 font-semibold"
+                className="text-[#FF6B2C] hover:text-[#E85B1E] font-semibold"
               >
                 Back to Sign in
               </button>

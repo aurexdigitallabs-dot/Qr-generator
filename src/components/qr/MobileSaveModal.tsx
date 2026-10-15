@@ -158,22 +158,22 @@ export function MobileSaveModal({
       onClick={onClose}
     >
       <div 
-        className="w-full sm:max-w-md bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl border border-slate-100 overflow-hidden transform transition-all animate-in slide-in-from-bottom duration-300 max-h-[92vh] flex flex-col"
+        className="w-full sm:max-w-md bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl border border-[#E5E5E5] overflow-hidden transform transition-all animate-in slide-in-from-bottom duration-300 max-h-[92vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Mobile Drag Indicator */}
         <div className="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mt-2.5 sm:hidden" />
 
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-100">
+        <div className="flex items-center justify-between px-5 py-3.5 border-b border-[#E5E5E5]">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600">
+            <div className="w-9 h-9 rounded-xl bg-[#FFF2EB] flex items-center justify-center text-[#FF6B2C]">
               <Smartphone className="w-4 h-4" />
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="text-sm font-semibold text-slate-900">Save QR Code</h3>
-                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-indigo-100 text-indigo-700 uppercase">
+                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-[#FFE6D9] text-[#FF6B2C] uppercase">
                   {format}
                 </span>
               </div>
@@ -193,8 +193,8 @@ export function MobileSaveModal({
         {/* Body: Image preview & Touch instruction */}
         <div className="p-5 space-y-4 overflow-y-auto">
           {/* QR Display Card */}
-          <div className="bg-gradient-to-b from-slate-50 to-slate-100/60 rounded-2xl p-4 flex flex-col items-center justify-center border border-slate-200/80 shadow-inner">
-            <div className="bg-white p-3 rounded-xl shadow-sm border border-slate-100 max-w-[210px] max-h-[210px]">
+          <div className="bg-gradient-to-b from-slate-50 to-slate-100/60 rounded-2xl p-4 flex flex-col items-center justify-center border border-[#E5E5E5]/80 shadow-inner">
+            <div className="bg-white p-3 rounded-xl shadow-sm border border-[#E5E5E5] max-w-[210px] max-h-[210px]">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={dataUrl}
@@ -202,8 +202,8 @@ export function MobileSaveModal({
                 className="w-full h-auto object-contain select-all cursor-pointer rounded-lg"
               />
             </div>
-            <div className="mt-3 flex items-center gap-1.5 text-xs text-indigo-700 bg-indigo-50/90 border border-indigo-100/80 px-3.5 py-1.5 rounded-full font-medium text-center">
-              <Sparkles className="w-3.5 h-3.5 shrink-0 text-indigo-600" />
+            <div className="mt-3 flex items-center gap-1.5 text-xs text-[#FF6B2C] bg-[#FFF2EB]/90 border border-[#FFE6D9] px-3.5 py-1.5 rounded-full font-medium text-center">
+              <Sparkles className="w-3.5 h-3.5 shrink-0 text-[#FF6B2C]" />
               <span>
                 {isSvg
                   ? <>Tap &amp; hold image or use <strong>Save to Files</strong></>
@@ -219,7 +219,7 @@ export function MobileSaveModal({
               type="button"
               onClick={handleShare}
               disabled={isSharing}
-              className="w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl bg-indigo-600 text-white font-semibold text-sm hover:bg-indigo-700 active:scale-[0.99] transition shadow-md shadow-indigo-600/20 cursor-pointer"
+              className="w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl bg-[#FF6B2C] text-white font-semibold text-sm hover:bg-[#E85B1E] active:scale-[0.99] transition shadow-md shadow-[#FF6B2C]/20 cursor-pointer"
             >
               <Share2 className="w-4 h-4" />
               <span>
@@ -233,7 +233,7 @@ export function MobileSaveModal({
                 type="button"
                 onClick={handleDirectDownload}
                 disabled={isDownloading}
-                className="flex flex-col items-center justify-center gap-1 py-2.5 px-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 active:bg-slate-100 text-slate-700 text-xs font-semibold transition cursor-pointer"
+                className="flex flex-col items-center justify-center gap-1 py-2.5 px-2 rounded-xl border border-[#E5E5E5] bg-white hover:bg-slate-50 active:bg-slate-100 text-slate-700 text-xs font-semibold transition cursor-pointer"
               >
                 <Download className="w-4 h-4 text-slate-600" />
                 <span>Download</span>
@@ -242,7 +242,7 @@ export function MobileSaveModal({
               <button
                 type="button"
                 onClick={handleCopy}
-                className="flex flex-col items-center justify-center gap-1 py-2.5 px-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 active:bg-slate-100 text-slate-700 text-xs font-semibold transition cursor-pointer"
+                className="flex flex-col items-center justify-center gap-1 py-2.5 px-2 rounded-xl border border-[#E5E5E5] bg-white hover:bg-slate-50 active:bg-slate-100 text-slate-700 text-xs font-semibold transition cursor-pointer"
               >
                 {copied ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4 text-slate-600" />}
                 <span>{copied ? 'Copied!' : (isSvg ? 'Copy SVG' : 'Copy Image')}</span>
@@ -251,7 +251,7 @@ export function MobileSaveModal({
               <button
                 type="button"
                 onClick={handleOpenInNewTab}
-                className="flex flex-col items-center justify-center gap-1 py-2.5 px-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 active:bg-slate-100 text-slate-700 text-xs font-semibold transition cursor-pointer"
+                className="flex flex-col items-center justify-center gap-1 py-2.5 px-2 rounded-xl border border-[#E5E5E5] bg-white hover:bg-slate-50 active:bg-slate-100 text-slate-700 text-xs font-semibold transition cursor-pointer"
               >
                 <ExternalLink className="w-4 h-4 text-slate-600" />
                 <span>Open Tab</span>
@@ -261,7 +261,7 @@ export function MobileSaveModal({
         </div>
 
         {/* Footer */}
-        <div className="px-5 py-3 bg-slate-50 border-t border-slate-100 text-center">
+        <div className="px-5 py-3 bg-slate-50 border-t border-[#E5E5E5] text-center">
           <button
             type="button"
             onClick={onClose}
