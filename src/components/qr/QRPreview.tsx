@@ -7,8 +7,27 @@ import { ScanReliabilityMeter } from './ScanReliabilityMeter';
 import { Smartphone, Monitor, AlertCircle, Sparkles, QrCode } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
+export interface QRDownloadResult {
+  success: boolean;
+  isMobile: boolean;
+  sharedViaWebShare: boolean;
+  dataUrl: string;
+  blob: Blob;
+  fileName: string;
+  format: ExportFormat;
+}
+
+export function isMobileDevice(): boolean {
+  if (typeof window === 'undefined') return false;
+  const ua = navigator.userAgent || '';
+  const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+  const isIPadOS = navigator.maxTouchPoints > 1 && /Macintosh/i.test(ua);
+  const isTouchScreen = typeof window.matchMedia === 'function' && window.matchMedia('(pointer: coarse)').matches && window.innerWidth <= 1024;
+  return isMobileUA || isIPadOS || isTouchScreen;
+}
+
 export interface QRPreviewRef {
-  downloadQR: (format: ExportFormat, resolution: ExportResolution, fileName: string) => Promise<void>;
+  downloadQR: (format: ExportFormat, resolution: ExportResolution, fileName: string) => Promise<QRDownloadResult>;
   copyToClipboard: () => Promise<void>;
 }
 
@@ -158,8 +177,10 @@ export const QRPreview = forwardRef<QRPreviewRef, QRPreviewProps>(function QRPre
 
   // Expose download and clipboard actions via ref
   useImperativeHandle(ref, () => ({
-    async downloadQR(format: ExportFormat, resolution: ExportResolution, fileName: string) {
-      if (typeof window === 'undefined') return;
+    async downloadQR(format: ExportFormat, resolution: ExportResolution, fileName: string): Promise<QRDownloadResult> {
+      if (typeof window === 'undefined') {
+        throw new Error('Window is not available during server-side execution.');
+      }
       if (!hasValidPayload || !payload) {
         throw new Error('Please enter valid content before downloading.');
       }
@@ -272,43 +293,68 @@ export const QRPreview = forwardRef<QRPreviewRef, QRPreviewProps>(function QRPre
       });
       console.log('[QR Studio] 5b. Base64 Data URL ready, length:', dataUrl.length);
 
-      // ─── ENGINE 1: Native OS File System Access API (showSaveFilePicker) ───
-      // Supported in modern Edge & Chrome on Windows desktop.
-      // Prompts user with native OS Save As dialog prefilled with fullFileName.
-      // Writes binary stream directly to user selected path, eliminating browser UUID mangling.
-      if (typeof window !== 'undefined' && 'showSaveFilePicker' in window) {
-        try {
-          console.log('[QR Studio] 🚀 Engine 1: Triggering native showSaveFilePicker with suggested name:', fullFileName);
-          const handle = await (window as any).showSaveFilePicker({
-            suggestedName: fullFileName,
-            types: [
-              {
-                description: format === 'svg' ? 'Scalable Vector Graphics (*.svg)' : 'PNG Image (*.png)',
-                accept: {
-                  [format === 'svg' ? 'image/svg+xml' : 'image/png']: [`.${format}`],
-                },
-              },
-            ],
-          });
-          const writable = await handle.createWritable();
-          await writable.write(finalBlob);
-          await writable.close();
-          console.log('[QR Studio] ✅ Success via Native File Picker! File written to disk:', fullFileName);
-          return;
-        } catch (pickerErr: any) {
-          if (pickerErr.name === 'AbortError') {
-            console.log('[QR Studio] ℹ️ User cancelled Save File dialog.');
-            return;
+      const mobile = isMobileDevice();
+
+      // ─── 1. MOBILE DEVICE WORKFLOW (iOS Safari / Android Chrome / WebViews) ───
+      if (mobile) {
+        console.log('[QR Studio] 📱 Mobile device detected. Initiating mobile save flow for:', fullFileName);
+
+        // Attempt Web Share API with native File object
+        if (typeof navigator !== 'undefined' && typeof navigator.canShare === 'function') {
+          try {
+            const shareFile = new File([finalBlob], fullFileName, {
+              type: format === 'svg' ? 'image/svg+xml' : 'image/png',
+            });
+            if (navigator.canShare({ files: [shareFile] })) {
+              console.log('[QR Studio] 🚀 Calling navigator.share with file...');
+              await navigator.share({
+                files: [shareFile],
+                title: fullFileName,
+                text: 'Your custom QR Code',
+              });
+              console.log('[QR Studio] ✅ Successfully shared via native system share sheet!');
+              return {
+                success: true,
+                isMobile: true,
+                sharedViaWebShare: true,
+                dataUrl,
+                blob: finalBlob,
+                fileName: fullFileName,
+                format,
+              };
+            }
+          } catch (shareErr: any) {
+            if (shareErr.name === 'AbortError') {
+              console.log('[QR Studio] ℹ️ User cancelled the native share sheet.');
+              return {
+                success: true,
+                isMobile: true,
+                sharedViaWebShare: false,
+                dataUrl,
+                blob: finalBlob,
+                fileName: fullFileName,
+                format,
+              };
+            }
+            console.warn('[QR Studio] Web Share failed or rejected, falling back to mobile save modal:', shareErr);
           }
-          console.warn('[QR Studio] Native picker failed or declined, falling back to direct anchor:', pickerErr);
         }
+
+        // Return with isMobile: true so page can render MobileSaveModal bottom sheet
+        return {
+          success: true,
+          isMobile: true,
+          sharedViaWebShare: false,
+          dataUrl,
+          blob: finalBlob,
+          fileName: fullFileName,
+          format,
+        };
       }
 
-      // ─── ENGINE 2: Direct Data URI Anchor Download ───
-      // Data URIs contain NO blob UUID in their URL string.
-      // Setting download attribute on a Data URI instructs Chrome/Edge to save with fullFileName.
+      // ─── 2. DESKTOP (PC) WORKFLOW: Direct 1-Click Browser Download (NO popup window) ───
+      console.log('[QR Studio] 💻 Desktop PC detected. Initiating direct file download for:', fullFileName);
       try {
-        console.log('[QR Studio] 🚀 Engine 2: Triggering Direct Data URI Anchor for:', fullFileName);
         const downloadLink = document.createElement('a');
         downloadLink.download = fullFileName;
         downloadLink.href = dataUrl;
@@ -318,27 +364,27 @@ export const QRPreview = forwardRef<QRPreviewRef, QRPreviewProps>(function QRPre
         downloadLink.style.opacity = '0';
         document.body.appendChild(downloadLink);
         downloadLink.click();
-        console.log('[QR Studio] ✅ Success via Direct Data URI Anchor! Dispatched click.');
+        console.log('[QR Studio] ✅ Success via direct anchor download!');
         setTimeout(() => {
           if (downloadLink.parentNode) {
             downloadLink.parentNode.removeChild(downloadLink);
           }
-        }, 3000);
-        return;
+        }, 1500);
       } catch (dataErr) {
-        console.warn('[QR Studio] Engine 2 failed, falling back to FileSaver:', dataErr);
-      }
-
-      // ─── ENGINE 3: FileSaver.js Fallback ───
-      try {
-        console.log('[QR Studio] 🚀 Engine 3: Fallback to FileSaver.js saveAs...');
+        console.warn('[QR Studio] Direct anchor failed, falling back to FileSaver:', dataErr);
         const { saveAs } = await import('file-saver');
         saveAs(finalBlob, fullFileName);
-        console.log('[QR Studio] ✅ Success via FileSaver.js!');
-      } catch (fsErr) {
-        console.error('[QR Studio] ❌ All download engines failed:', fsErr);
-        throw new Error('All download engines failed to save file.');
       }
+
+      return {
+        success: true,
+        isMobile: false,
+        sharedViaWebShare: false,
+        dataUrl,
+        blob: finalBlob,
+        fileName: fullFileName,
+        format,
+      };
     },
 
     async copyToClipboard() {

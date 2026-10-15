@@ -9,6 +9,7 @@ import { QRDesignEditor } from '@/components/qr/QRDesignEditor';
 import { QRExportActions } from '@/components/qr/QRExportActions';
 import { SavedQRCodesModal } from '@/components/saved/SavedQRCodesModal';
 import { AuthModal } from '@/components/auth/AuthModal';
+import { MobileSaveModal } from '@/components/qr/MobileSaveModal';
 import { useToast } from '@/components/ui/Toast';
 
 // Form components
@@ -64,6 +65,21 @@ export default function HomePage() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authModalReason, setAuthModalReason] = useState<string | null>(null);
   const [isSavedModalOpen, setIsSavedModalOpen] = useState(false);
+
+  // Mobile Save Sheet modal state
+  const [mobileModalData, setMobileModalData] = useState<{
+    isOpen: boolean;
+    dataUrl: string;
+    format: ExportFormat;
+    fileName: string;
+    blob?: Blob | null;
+  }>({
+    isOpen: false,
+    dataUrl: '',
+    format: 'png',
+    fileName: 'brand-qrcode.png',
+    blob: null,
+  });
 
   // Pending download stash for auto-resume after sign-in
   const pendingDownloadRef = useRef<{
@@ -418,8 +434,8 @@ export default function HomePage() {
 
     try {
       console.log('[Download Pipeline] Step 1: Triggering previewRef.current.downloadQR...');
-      await previewRef.current.downloadQR(format, resolution, fileName);
-      console.log('[Download Pipeline] Step 1: File download action completed successfully.');
+      const downloadResult = await previewRef.current.downloadQR(format, resolution, fileName);
+      console.log('[Download Pipeline] Step 1: File download action completed:', downloadResult);
 
       // Persist logo to Cloudflare R2 if it is base64 dataUrl
       let currentDesign = { ...design };
@@ -482,7 +498,23 @@ export default function HomePage() {
 
       console.log('[Download Pipeline] ✅ Complete! Download and collection recording finished.');
       console.groupEnd();
-      success(`${format.toUpperCase()} downloaded & stored in your collection history!`);
+
+      if (downloadResult?.isMobile) {
+        if (downloadResult.sharedViaWebShare) {
+          success('QR Code shared! Choose "Save Image" to save to your photos.');
+        } else {
+          setMobileModalData({
+            isOpen: true,
+            dataUrl: downloadResult.dataUrl,
+            format: downloadResult.format,
+            fileName: downloadResult.fileName,
+            blob: downloadResult.blob,
+          });
+          info('Tap & hold image to save to photos, or use the share sheet.');
+        }
+      } else {
+        success(`${format.toUpperCase()} downloaded to your device & saved to collection history!`);
+      }
     } catch (err: any) {
       console.error('[Download Pipeline] ❌ Download failed with error:', err);
       console.groupEnd();
@@ -788,6 +820,16 @@ export default function HomePage() {
             }, 400);
           }
         }}
+      />
+
+      {/* Mobile Save Modal Bottom Sheet */}
+      <MobileSaveModal
+        isOpen={mobileModalData.isOpen}
+        onClose={() => setMobileModalData((prev) => ({ ...prev, isOpen: false }))}
+        dataUrl={mobileModalData.dataUrl}
+        format={mobileModalData.format}
+        fileName={mobileModalData.fileName}
+        blob={mobileModalData.blob}
       />
     </div>
   );
